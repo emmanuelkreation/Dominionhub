@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Buyer Dashboard – Dominion Home Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f2937; }
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+    /* Navbar */
+    .navbar {
+      background: white;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      flex-wrap: wrap;
+    }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #1e3a8a;
+      text-decoration: none;
+    }
+    .logo span { color: #d97706; }
+    .nav-links { display: flex; gap: 1rem; align-items: center; }
+    .btn-outline {
+      border: 1.5px solid #1e3a8a;
+      background: transparent;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      color: #1e3a8a;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: #1e3a8a;
+      border: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 40px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .dashboard-title { margin: 2rem 0 1rem; text-align: center; }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+    .card {
+      background: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .card h3 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid #d97706;
+      padding-left: 0.8rem;
+    }
+    .property-item, .chat-item, .search-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .property-info, .chat-info, .search-info { flex: 1; cursor: pointer; }
+    .property-info p, .chat-info p { margin: 0.2rem 0; color: #6b7280; font-size: 0.8rem; }
+    .remove-save, .delete-search {
+      background: none;
+      border: none;
+      color: #dc2626;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .unread-badge {
+      background: #dc2626;
+      color: white;
+      border-radius: 50%;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.7rem;
+      margin-left: 0.5rem;
+    }
+    .save-search-form {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .save-search-form input {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+    }
+    footer {
+      background: #0f172a;
+      color: #cbd5e1;
+      text-align: center;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    .success { background: #dcfce7; color: #16a34a; padding: 0.5rem; border-radius: 0.5rem; margin: 1rem 0; display: none; }
+    .error { background: #fee2e2; color: #dc2626; padding: 0.5rem; border-radius: 0.5rem; margin: 1rem 0; display: none; }
+    @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-container">
+    <a href="index.html" class="logo">Dominion <span>Home Hub</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="listings.html">Listings</a>
+      <button id="logoutBtn" class="btn-outline">Logout</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="dashboard-title">
+    <h1>Buyer Dashboard</h1>
+    <p>Manage your saved properties, chats, and searches</p>
+  </div>
+
+  <div id="successMsg" class="success"></div>
+  <div id="errorMsg" class="error"></div>
+
+  <div class="dashboard-grid">
+    <!-- Saved Properties -->
+    <div class="card">
+      <h3><i class="fas fa-heart" style="color:#dc2626;"></i> Saved Properties</h3>
+      <div id="savedPropertiesList">Loading...</div>
+    </div>
+
+    <!-- Active Chats -->
+    <div class="card">
+      <h3><i class="fas fa-comments"></i> Active Chats</h3>
+      <div id="chatsList">Loading...</div>
+    </div>
+
+    <!-- Saved Searches -->
+    <div class="card">
+      <h3><i class="fas fa-search"></i> Saved Searches</h3>
+      <div id="savedSearchesList">Loading...</div>
+      <div class="save-search-form">
+        <input type="text" id="searchName" placeholder="e.g., 3-bed under 500k">
+        <button id="saveCurrentSearchBtn" class="btn-primary">Save Current Filters</button>
+      </div>
+      <p style="font-size:0.7rem; margin-top:0.5rem; color:#6b7280;">Saves the filters you last used on the listings page (location, price, beds, etc.)</p>
+    </div>
+
+    <!-- Recently Viewed -->
+    <div class="card">
+      <h3><i class="fas fa-clock"></i> Recently Viewed</h3>
+      <div id="recentlyViewedList">Loading...</div>
+    </div>
+
+    <!-- Account Settings -->
+    <div class="card">
+      <h3><i class="fas fa-user-cog"></i> Account Settings</h3>
+      <div style="margin-bottom: 1rem;">
+        <label>Display Name</label>
+        <input type="text" id="displayName" style="width:100%; padding:0.5rem; margin-top:0.3rem; border-radius:0.5rem; border:1px solid #e2e8f0;">
+        <button id="updateProfileBtn" class="btn-primary" style="margin-top:0.5rem;">Update Name</button>
+      </div>
+      <div>
+        <button id="changePasswordBtn" class="btn-outline">Change Password</button>
+        <button id="deleteAccountBtn" class="btn-outline" style="border-color:#dc2626; color:#dc2626; margin-left:0.5rem;">Delete Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>&copy; 2025 Dominion Home Hub – Buyer Dashboard</p>
+</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut, updateProfile, sendPasswordResetEmail, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getDatabase, ref, get, set, update, remove, child, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
+    authDomain: "dominion-1e85f.firebaseapp.com",
+    databaseURL: "https://dominion-1e85f-default-rtdb.firebaseio.com",
+    projectId: "dominion-1e85f",
+    storageBucket: "dominion-1e85f.firebasestorage.app",
+    messagingSenderId: "1036601319820",
+    appId: "1:1036601319820:web:3395f663c3e05326ed76a9",
+    measurementId: "G-BZLJPTFMZ1"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  let currentUser = null;
+  let savedPropertiesIds = [];
+  let savedSearches = [];
+
+  // DOM elements
+  const savedPropsDiv = document.getElementById('savedPropertiesList');
+  const chatsDiv = document.getElementById('chatsList');
+  const savedSearchesDiv = document.getElementById('savedSearchesList');
+  const recentlyViewedDiv = document.getElementById('recentlyViewedList');
+  const displayNameInput = document.getElementById('displayName');
+  const updateProfileBtn = document.getElementById('updateProfileBtn');
+  const changePasswordBtn = document.getElementById('changePasswordBtn');
+  const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+  const saveCurrentSearchBtn = document.getElementById('saveCurrentSearchBtn');
+  const searchNameInput = document.getElementById('searchName');
+  const successDiv = document.getElementById('successMsg');
+  const errorDiv = document.getElementById('errorMsg');
+
+  function showSuccess(msg) { successDiv.textContent = msg; successDiv.style.display = 'block'; setTimeout(() => successDiv.style.display = 'none', 4000); }
+  function showError(msg) { errorDiv.textContent = msg; errorDiv.style.display = 'block'; setTimeout(() => errorDiv.style.display = 'none', 5000); }
+
+  // Load user data from Realtime Database
+  async function loadUserData() {
+    if (!currentUser) return;
+    const userRef = ref(db, `users/${currentUser.uid}`);
+    const snapshot = await get(userRef);
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      savedPropertiesIds = data.savedProperties || [];
+      savedSearches = data.savedSearches || [];
+      displayNameInput.value = data.displayName || currentUser.displayName || '';
+    } else {
+      // Create user document if not exists
+      await set(userRef, {
+        email: currentUser.email,
+        displayName: currentUser.displayName || '',
+        role: 'buyer',
+        createdAt: new Date().toISOString(),
+        savedProperties: [],
+        savedSearches: []
+      });
+      savedPropertiesIds = [];
+      savedSearches = [];
+    }
+    await loadSavedProperties();
+    renderSavedSearches();
+    loadChats();
+    loadRecentlyViewed();
+  }
+
+  // Fetch property details for saved IDs
+  async function loadSavedProperties() {
+    if (!savedPropertiesIds.length) {
+      savedPropsDiv.innerHTML = '<p>No saved properties yet. Click the ❤️ on property cards to save.</p>';
+      return;
+    }
+    savedPropsDiv.innerHTML = '<p>Loading...</p>';
+    const properties = [];
+    for (const id of savedPropertiesIds) {
+      const snapshot = await get(child(ref(db), `properties/${id}`));
+      if (snapshot.exists()) {
+        properties.push({ id, ...snapshot.val() });
+      }
+    }
+    if (properties.length === 0) {
+      savedPropsDiv.innerHTML = '<p>No saved properties found.</p>';
+      return;
+    }
+    let html = '';
+    properties.forEach(prop => {
+      const imageUrl = prop.images?.[0] || 'https://via.placeholder.com/60';
+      html += `
+        <div class="property-item" data-id="${prop.id}">
+          <div class="property-info" style="display:flex; gap:0.5rem; align-items:center;">
+            <img src="${imageUrl}" width="50" height="50" style="border-radius:8px; object-fit:cover;">
+            <div>
+              <strong>${prop.location.split(',')[0]}</strong>
+              <p>${prop.listingType === 'buy' ? 'For Sale' : (prop.listingType === 'rent' ? 'For Rent' : 'For Lease')} - $${prop.price.toLocaleString()}</p>
+            </div>
+          </div>
+          <button class="remove-save" data-id="${prop.id}"><i class="fas fa-trash"></i></button>
+        </div>
+      `;
+    });
+    savedPropsDiv.innerHTML = html;
+    // Attach click handlers for property info (go to detail) and remove button
+    document.querySelectorAll('.property-info').forEach(el => {
+      const id = el.closest('.property-item').getAttribute('data-id');
+      el.addEventListener('click', () => window.location.href = `property-detail.html?id=${id}`);
+    });
+    document.querySelectorAll('.remove-save').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const propId = btn.getAttribute('data-id');
+        await removeSavedProperty(propId);
+      });
+    });
+  }
+
+  async function removeSavedProperty(propertyId) {
+    if (!currentUser) return;
+    const newList = savedPropertiesIds.filter(id => id !== propertyId);
+    await update(ref(db, `users/${currentUser.uid}`), { savedProperties: newList });
+    savedPropertiesIds = newList;
+    showSuccess('Property removed from saved list');
+    loadSavedProperties(); // refresh
+  }
+
+  // Load chats where buyer is current user
+  async function loadChats() {
+    const chatsRef = ref(db, 'chats');
+    const q = query(chatsRef, orderByChild('buyerId'), equalTo(currentUser.uid));
+    const snapshot = await get(q);
+    if (!snapshot.exists()) {
+      chatsDiv.innerHTML = '<p>No active chats. Contact sellers from property pages.</p>';
+      return;
+    }
+    const chats = [];
+    snapshot.forEach(child => {
+      chats.push({ id: child.key, ...child.val() });
+    });
+    // Also get property details for each chat
+    let html = '';
+    for (const chat of chats) {
+      const propSnap = await get(child(ref(db), `properties/${chat.propertyId}`));
+      if (propSnap.exists()) {
+        const prop = propSnap.val();
+        const unread = chat.buyerHasUnread ? '<span class="unread-badge">New</span>' : '';
+        html += `
+          <div class="chat-item" data-chatid="${chat.id}" data-propid="${chat.propertyId}" data-sellerid="${chat.sellerId}">
+            <div class="chat-info">
+              <strong>${prop.location.split(',')[0]}</strong>
+              <p>Last message: ${chat.lastMessage ? chat.lastMessage.substring(0, 40) : 'No messages yet'}</p>
+            </div>
+            ${unread}
+          </div>
+        `;
+      }
+    }
+    chatsDiv.innerHTML = html || '<p>No active chats.</p>';
+    document.querySelectorAll('.chat-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const propId = el.getAttribute('data-propid');
+        const sellerId = el.getAttribute('data-sellerid');
+        window.location.href = `chat.html?propertyId=${propId}&sellerId=${sellerId}`;
+      });
+    });
+  }
+
+  // Saved Searches
+  function renderSavedSearches() {
+    if (!savedSearches.length) {
+      savedSearchesDiv.innerHTML = '<p>No saved searches. Use the form above.</p>';
+      return;
+    }
+    let html = '';
+    savedSearches.forEach((search, idx) => {
+      html += `
+        <div class="search-item" data-index="${idx}">
+          <div class="search-info">
+            <strong>${search.name}</strong>
+            <p>${search.filters.location ? `Location: ${search.filters.location}, ` : ''}Price: ${search.filters.minPrice || 0} - ${search.filters.maxPrice || 'any'}, Beds: ${search.filters.bedrooms || 'any'}</p>
+          </div>
+          <button class="delete-search" data-index="${idx}"><i class="fas fa-times"></i></button>
+        </div>
+      `;
+    });
+    savedSearchesDiv.innerHTML = html;
+    document.querySelectorAll('.search-info').forEach(el => {
+      const idx = el.closest('.search-item').getAttribute('data-index');
+      el.addEventListener('click', () => {
+        const search = savedSearches[idx];
+        // Redirect to listings page with filters
+        const params = new URLSearchParams();
+        if (search.filters.location) params.set('location', search.filters.location);
+        if (search.filters.minPrice) params.set('minPrice', search.filters.minPrice);
+        if (search.filters.maxPrice) params.set('maxPrice', search.filters.maxPrice);
+        if (search.filters.bedrooms) params.set('bedrooms', search.filters.bedrooms);
+        if (search.filters.bathrooms) params.set('bathrooms', search.filters.bathrooms);
+        if (search.filters.propertyType) params.set('propertyType', search.filters.propertyType);
+        window.location.href = `listings.html?${params.toString()}`;
+      });
+    });
+    document.querySelectorAll('.delete-search').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-index'));
+        await removeSavedSearch(idx);
+      });
+    });
+  }
+
+  async function removeSavedSearch(index) {
+    const newSearches = [...savedSearches];
+    newSearches.splice(index, 1);
+    await update(ref(db, `users/${currentUser.uid}`), { savedSearches: newSearches });
+    savedSearches = newSearches;
+    renderSavedSearches();
+    showSuccess('Search removed');
+  }
+
+  // Save current search (from localStorage or default)
+  async function saveCurrentSearch() {
+    const name = searchNameInput.value.trim();
+    if (!name) { showError('Please enter a name for this search'); return; }
+    // Load filters from localStorage (set by listings page)
+    let filters = {};
+    const stored = localStorage.getItem('lastSearchFilters');
+    if (stored) {
+      filters = JSON.parse(stored);
+    } else {
+      filters = { location: '', minPrice: '', maxPrice: '', bedrooms: '', bathrooms: '', propertyType: '' };
+    }
+    const newSearch = { name, filters, createdAt: new Date().toISOString() };
+    const updated = [...savedSearches, newSearch];
+    await update(ref(db, `users/${currentUser.uid}`), { savedSearches: updated });
+    savedSearches = updated;
+    renderSavedSearches();
+    searchNameInput.value = '';
+    showSuccess('Search saved!');
+  }
+
+  // Recently Viewed (localStorage)
+  function loadRecentlyViewed() {
+    const viewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+    if (!viewed.length) {
+      recentlyViewedDiv.innerHTML = '<p>No recently viewed properties. Browse listings.</p>';
+      return;
+    }
+    let html = '';
+    viewed.slice(0, 10).forEach(prop => {
+      html += `
+        <div class="property-item" data-id="${prop.id}">
+          <div class="property-info" style="display:flex; gap:0.5rem; align-items:center;">
+            <img src="${prop.image}" width="50" height="50" style="border-radius:8px; object-fit:cover;">
+            <div>
+              <strong>${prop.location}</strong>
+              <p>$${prop.price.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    recentlyViewedDiv.innerHTML = html;
+    document.querySelectorAll('#recentlyViewedList .property-info').forEach(el => {
+      const id = el.closest('.property-item').getAttribute('data-id');
+      el.addEventListener('click', () => window.location.href = `property-detail.html?id=${id}`);
+    });
+  }
+
+  // Account settings
+  async function updateDisplayName() {
+    const newName = displayNameInput.value.trim();
+    if (!newName) { showError('Name cannot be empty'); return; }
+    try {
+      await updateProfile(auth.currentUser, { displayName: newName });
+      await update(ref(db, `users/${currentUser.uid}`), { displayName: newName });
+      showSuccess('Display name updated');
+    } catch (err) { showError(err.message); }
+  }
+
+  async function changePassword() {
+    const email = currentUser.email;
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showSuccess('Password reset email sent. Check your inbox.');
+    } catch (err) { showError(err.message); }
+  }
+
+  async function deleteAccount() {
+    if (!confirm('WARNING: This will permanently delete your account and all data. Type "DELETE" to confirm.')) return;
+    const promptText = prompt('Type DELETE to confirm');
+    if (promptText !== 'DELETE') { showError('Account deletion cancelled'); return; }
+    try {
+      // Re-authenticate (simple prompt for password)
+      const password = prompt('Enter your password to confirm deletion:');
+      if (!password) { showError('Password required'); return; }
+      const credential = EmailAuthProvider.credential(currentUser.email, password);
+      await reauthenticateWithCredential(currentUser, credential);
+      // Delete user data from Realtime Database (properties? only user node)
+      await remove(ref(db, `users/${currentUser.uid}`));
+      // Delete any chats? optional. Then delete auth user.
+      await deleteUser(currentUser);
+      window.location.href = 'index.html';
+    } catch (err) { showError('Deletion failed: ' + err.message); }
+  }
+
+  // Auth check
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = 'login.html?redirect=buyer-dashboard.html';
+      return;
+    }
+    currentUser = user;
+    await loadUserData();
+  });
+
+  // Event listeners
+  updateProfileBtn.addEventListener('click', updateDisplayName);
+  changePasswordBtn.addEventListener('click', changePassword);
+  deleteAccountBtn.addEventListener('click', deleteAccount);
+  saveCurrentSearchBtn.addEventListener('click', saveCurrentSearch);
+  document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'index.html'; });
+</script>
+</body>
+</html>
