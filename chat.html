@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Chat – Dominion Home Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f9fafb;
+      color: #1f2937;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Navbar */
+    .navbar {
+      background: white;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      padding: 0.8rem 0;
+    }
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #1e3a8a;
+      text-decoration: none;
+    }
+    .logo span { color: #d97706; }
+    .btn-outline {
+      border: 1.5px solid #1e3a8a;
+      background: transparent;
+      padding: 0.4rem 1rem;
+      border-radius: 40px;
+      color: #1e3a8a;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    /* Chat Layout */
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 1000px;
+      margin: 1rem auto;
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      overflow: hidden;
+      height: calc(100vh - 100px);
+    }
+    /* Property Summary */
+    .property-summary {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      background: #f1f5f9;
+      border-bottom: 1px solid #e2e8f0;
+      align-items: center;
+    }
+    .prop-img {
+      width: 60px;
+      height: 60px;
+      background-size: cover;
+      background-position: center;
+      border-radius: 0.5rem;
+    }
+    .prop-details h3 { font-size: 1rem; margin-bottom: 0.2rem; }
+    .prop-details p { font-size: 0.8rem; color: #6b7280; }
+    /* Messages Area */
+    .messages-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      background: #ffffff;
+    }
+    .message {
+      display: flex;
+      flex-direction: column;
+      max-width: 70%;
+    }
+    .message.sent {
+      align-self: flex-end;
+    }
+    .message.received {
+      align-self: flex-start;
+    }
+    .message-bubble {
+      padding: 0.7rem 1rem;
+      border-radius: 1.2rem;
+      background: #f1f5f9;
+      color: #1f2937;
+      word-wrap: break-word;
+    }
+    .message.sent .message-bubble {
+      background: #1e3a8a;
+      color: white;
+    }
+    .message-time {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      margin: 0.2rem 0.5rem;
+    }
+    /* Input Area */
+    .input-area {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem;
+      border-top: 1px solid #e2e8f0;
+      background: white;
+    }
+    .input-area input {
+      flex: 1;
+      padding: 0.7rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 2rem;
+      outline: none;
+    }
+    .input-area button {
+      background: #1e3a8a;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 2rem;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .back-link {
+      display: inline-block;
+      margin: 1rem 0 0 1rem;
+      color: #1e3a8a;
+      text-decoration: none;
+    }
+    @media (max-width: 640px) {
+      .message { max-width: 85%; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-container">
+    <a href="index.html" class="logo">Dominion <span>Home Hub</span></a>
+    <div></div>
+  </div>
+</nav>
+
+<a href="javascript:history.back()" class="back-link"><i class="fas fa-arrow-left"></i> Back</a>
+
+<div class="chat-container" id="chatContainer">
+  <div id="propertySummary" class="property-summary">
+    <div class="prop-img" style="background-image: url('https://via.placeholder.com/60');"></div>
+    <div class="prop-details">
+      <h3>Loading property...</h3>
+      <p></p>
+    </div>
+  </div>
+  <div id="messagesArea" class="messages-area">
+    <div style="text-align:center; padding:2rem;">Loading messages...</div>
+  </div>
+  <div class="input-area">
+    <input type="text" id="messageInput" placeholder="Type your message...">
+    <button id="sendBtn">Send</button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getDatabase, ref, push, set, get, child, update, onChildAdded, serverTimestamp, query, orderByChild } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
+    authDomain: "dominion-1e85f.firebaseapp.com",
+    databaseURL: "https://dominion-1e85f-default-rtdb.firebaseio.com",
+    projectId: "dominion-1e85f",
+    storageBucket: "dominion-1e85f.firebasestorage.app",
+    messagingSenderId: "1036601319820",
+    appId: "1:1036601319820:web:3395f663c3e05326ed76a9",
+    measurementId: "G-BZLJPTFMZ1"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  // Get URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const propertyId = urlParams.get('propertyId');
+  const sellerId = urlParams.get('sellerId');
+
+  let currentUser = null;
+  let chatId = null;
+  let propertyData = null;
+
+  // DOM elements
+  const propertySummaryDiv = document.getElementById('propertySummary');
+  const messagesArea = document.getElementById('messagesArea');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+
+  // Helper: format timestamp
+  function formatTime(timestamp) {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // Load property details from Realtime Database
+  async function loadProperty() {
+    if (!propertyId) {
+      propertySummaryDiv.innerHTML = '<div class="prop-details"><h3>Invalid property</h3></div>';
+      return;
+    }
+    const snapshot = await get(child(ref(db), `properties/${propertyId}`));
+    if (snapshot.exists()) {
+      propertyData = snapshot.val();
+      const imageUrl = propertyData.images && propertyData.images.length ? propertyData.images[0] : 'https://via.placeholder.com/60';
+      document.querySelector('.prop-img').style.backgroundImage = `url('${imageUrl}')`;
+      document.querySelector('.prop-details h3').textContent = `${propertyData.propertyType} at ${propertyData.location.split(',')[0]}`;
+      document.querySelector('.prop-details p').textContent = `$${propertyData.price.toLocaleString()} - ${propertyData.listingType === 'buy' ? 'For Sale' : (propertyData.listingType === 'rent' ? 'For Rent' : 'For Lease')}`;
+    } else {
+      propertySummaryDiv.innerHTML = '<div class="prop-details"><h3>Property not found</h3></div>';
+    }
+  }
+
+  // Find or create chat room
+  async function getOrCreateChat() {
+    if (!currentUser || !propertyId || !sellerId) return;
+    // Check if chat already exists for this property and these two users
+    const chatsRef = ref(db, 'chats');
+    const snapshot = await get(chatsRef);
+    let existingChatId = null;
+    if (snapshot.exists()) {
+      snapshot.forEach(child => {
+        const chat = child.val();
+        if (chat.propertyId === propertyId && 
+            ((chat.buyerId === currentUser.uid && chat.sellerId === sellerId) ||
+             (chat.buyerId === sellerId && chat.sellerId === currentUser.uid))) {
+          existingChatId = child.key;
+        }
+      });
+    }
+    if (existingChatId) {
+      chatId = existingChatId;
+      // Mark messages as read for current user
+      await update(ref(db, `chats/${chatId}`), {
+        [`${currentUser.uid === sellerId ? 'sellerHasUnread' : 'buyerHasUnread'}`]: false
+      });
+    } else {
+      // Create new chat
+      const newChatRef = push(ref(db, 'chats'));
+      chatId = newChatRef.key;
+      const buyerId = currentUser.uid;
+      const isBuyer = (currentUser.uid !== sellerId);
+      await set(newChatRef, {
+        propertyId: propertyId,
+        buyerId: isBuyer ? currentUser.uid : sellerId,
+        sellerId: isBuyer ? sellerId : currentUser.uid,
+        lastMessage: '',
+        lastUpdated: serverTimestamp(),
+        buyerHasUnread: false,
+        sellerHasUnread: false
+      });
+    }
+    return chatId;
+  }
+
+  // Load messages in real time
+  function listenToMessages() {
+    if (!chatId) return;
+    const messagesRef = ref(db, `messages/${chatId}`);
+    const messagesQuery = query(messagesRef, orderByChild('timestamp'));
+    onChildAdded(messagesQuery, (snapshot) => {
+      const msg = snapshot.val();
+      displayMessage(msg);
+    });
+    // Also mark unread as false
+    const isSeller = (currentUser.uid === sellerId);
+    update(ref(db, `chats/${chatId}`), {
+      [isSeller ? 'sellerHasUnread' : 'buyerHasUnread']: false
+    });
+  }
+
+  function displayMessage(msg) {
+    // Remove "Loading..." placeholder if exists
+    if (messagesArea.children.length === 1 && messagesArea.children[0].innerText.includes('Loading')) {
+      messagesArea.innerHTML = '';
+    }
+    const isSent = (msg.senderId === currentUser.uid);
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+    messageDiv.innerHTML = `
+      <div class="message-bubble">${escapeHtml(msg.text)}</div>
+      <div class="message-time">${formatTime(msg.timestamp)}</div>
+    `;
+    messagesArea.appendChild(messageDiv);
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  async function sendMessage() {
+    const text = messageInput.value.trim();
+    if (!text || !chatId) return;
+    const messageRef = push(ref(db, `messages/${chatId}`));
+    await set(messageRef, {
+      senderId: currentUser.uid,
+      text: text,
+      timestamp: Date.now()
+    });
+    // Update last message in chat
+    await update(ref(db, `chats/${chatId}`), {
+      lastMessage: text,
+      lastUpdated: Date.now(),
+      // Set unread for the other party
+      [currentUser.uid === sellerId ? 'buyerHasUnread' : 'sellerHasUnread']: true
+    });
+    messageInput.value = '';
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+  }
+
+  // Auth check
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      // Redirect to login with return URL
+      window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
+      return;
+    }
+    currentUser = user;
+    await loadProperty();
+    await getOrCreateChat();
+    listenToMessages();
+  });
+
+  sendBtn.addEventListener('click', sendMessage);
+  messageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+</script>
+</body>
+</html>
