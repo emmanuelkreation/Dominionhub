@@ -1,0 +1,148 @@
+{
+  "properties": {
+    "prop_buy_1": {
+      "listingType": "buy",
+      "price": 875000,
+      "location": "1234 Hillside Ave, Austin, TX 78701",
+      "bedrooms": 4,
+      "bathrooms": 3.5,
+      "area": 2850,
+      "propertyType": "House",
+      "images": ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600"],
+      "isFeatured": true,
+      "createdAt": "2025-06-01T10:00:00Z"
+    },
+    "prop_buy_2": {
+      "listingType": "buy",
+      "price": 1250000,
+      "location": "56 Highland Park, Dallas, TX 75205",
+      "bedrooms": 5,
+      "bathrooms": 4,
+      "area": 3650,
+      "propertyType": "House",
+      "images": ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600"],
+      "isFeatured": true,
+      "createdAt": "2025-06-03T14:20:00Z"
+    },
+    "prop_buy_3": {
+      "listingType": "buy",
+      "price": 450000,
+      "location": "789 Oak St, Houston, TX 77002",
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "area": 1950,
+      "propertyType": "Townhouse",
+      "images": ["https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600"],
+      "isFeatured": true,
+      "createdAt": "2025-06-05T09:45:00Z"
+    },
+    "prop_buy_4": {
+      "listingType": "buy",
+      "price": 1899000,
+      "location": "12 Royal Palm, Miami, FL 33139",
+      "bedrooms": 6,
+      "bathrooms": 5.5,
+      "area": 5200,
+      "propertyType": "House",
+      "images": ["https://images.unsplash.com/photo-1613977257365-aaae5a9817ff?w=600"],
+      "isFeatured": true,
+      "createdAt": "2025-06-07T18:30:00Z"
+    },
+    "prop_rent_1": {
+      "listingType": "rent",
+      "price": 3200,
+      "location": "2400 Nueces St, Austin, TX 78705",
+      "bedrooms": 2,
+      "bathrooms": 2,
+      "area": 1250,
+      "propertyType": "Apartment",
+      "images": ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600"],
+      "isFeatured": true,
+      "createdAt": "2025-06-02T11:15:00Z"
+    },
+    "prop_rent_2": {
+      "listingType": "rent",
+      "price": 1850,
+      "location": "4500 Medical Pkwy, Dallas, TX 75204",
+      "bedrooms": 1,
+      "bathrooms": 1,
+      "area": 780,
+      "propertyType": "Apartment",
+      "images": ["https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600"],
+      "isFeatured": true,
+      "createdAt": "2025-06-04T13:20:00Z"
+    },
+    "prop_rent_3": {
+      "listingType": "rent",
+      "price": 5600,
+      "location": "1010 Post Oak Blvd, Houston, TX 77056",
+      "bedrooms": 3,
+      "bathrooms": 2.5,
+      "area": 2100,
+      "propertyType": "Condo",
+      "images": ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600"],
+      "isFeatured": true,
+      "createdAt": "2025-06-06T16:45:00Z"
+    },
+    "prop_rent_4": {
+      "listingType": "rent",
+      "price": 4200,
+      "location": "77 Seaport Blvd, Boston, MA 02210",
+      "bedrooms": 2,
+      "bathrooms": 2,
+      "area": 1450,
+      "propertyType": "Apartment",
+      "images": ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600"],
+      "isFeatured": true,
+      "createdAt": "2025-06-08T10:00:00Z"
+    },
+    "prop_lease_1": {
+      "listingType": "lease",
+      "price": 4800,
+      "location": "555 Corporate Dr, Houston, TX 77079",
+      "bedrooms": 3,
+      "bathrooms": 3,
+      "area": 2600,
+      "propertyType": "Townhouse",
+      "images": ["https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=600"],
+      "isFeatured": true,
+      "createdAt": "2025-06-02T08:30:00Z"
+    },
+    "prop_lease_2": {
+      "listingType": "lease",
+      "price": 6200,
+      "location": "1001 Lakeside, Seattle, WA 98101",
+      "bedrooms": 4,
+      "bathrooms": 3.5,
+      "area": 3100,
+      "propertyType": "House",
+      "images": ["https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600"],
+      "isFeatured": true,
+      "createdAt": "2025-06-04T14:00:00Z"
+    },
+    "prop_lease_3": {
+      "listingType": "lease",
+      "price": 3950,
+      "location": "2020 Union St, San Francisco, CA 94123",
+      "bedrooms": 2,
+      "bathrooms": 2,
+      "area": 1400,
+      "propertyType": "Apartment",
+      "images": ["https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600"],
+      "isFeatured": true,
+      "createdAt": "2025-06-06T19:15:00Z"
+    },
+    "prop_lease_4": {
+      "listingType": "lease",
+      "price": 8900,
+      "location": "1 Rodeo Dr, Beverly Hills, CA 90210",
+      "bedrooms": 5,
+      "bathrooms": 4,
+      "area": 4500,
+      "propertyType": "House",
+      "images": ["https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600"],
+      "isFeatured": true,
+      "createdAt": "2025-06-08T20:30:00Z"
+    }
+  }
+}
