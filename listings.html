@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Property Listings – Dominion Home Hub</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Leaflet CSS (for map) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f9fafb;
+      color: #1f2937;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    /* Navigation (same as homepage) */
+    .navbar {
+      background: white;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      flex-wrap: wrap;
+    }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #1e3a8a;
+      text-decoration: none;
+    }
+    .logo span { color: #d97706; }
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: #4b5563;
+      font-weight: 500;
+    }
+    .btn-outline {
+      border: 1.5px solid #1e3a8a;
+      background: transparent;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      color: #1e3a8a;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: #1e3a8a;
+      border: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 40px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    /* Layout */
+    .listings-layout {
+      display: flex;
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+    /* Sidebar filters */
+    .filters-sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      background: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      height: fit-content;
+      position: sticky;
+      top: 90px;
+    }
+    .filter-group {
+      margin-bottom: 1.5rem;
+    }
+    .filter-group label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .filter-group input, .filter-group select {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+    }
+    .price-range {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .price-range input {
+      width: 50%;
+    }
+    /* Map */
+    .map-container {
+      height: 300px;
+      border-radius: 1rem;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      border: 1px solid #e2e8f0;
+    }
+    /* Results toolbar */
+    .results-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .view-toggle button {
+      background: #f1f5f9;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    .view-toggle button.active {
+      background: #1e3a8a;
+      color: white;
+    }
+    /* Property grid */
+    .property-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .property-card {
+      background: white;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+    .property-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 20px -10px rgba(0,0,0,0.1);
+    }
+    .card-img {
+      height: 200px;
+      background-size: cover;
+      background-position: center;
+    }
+    .card-content {
+      padding: 1rem;
+    }
+    .price {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #1e3a8a;
+    }
+    .address {
+      color: #6b7280;
+      font-size: 0.85rem;
+      margin: 0.3rem 0;
+    }
+    .features {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.8rem;
+      margin: 0.5rem 0;
+    }
+    /* List view */
+    .list-view .property-card {
+      display: flex;
+      flex-direction: row;
+      height: 180px;
+    }
+    .list-view .card-img {
+      width: 240px;
+      height: 100%;
+    }
+    .list-view .card-content {
+      flex: 1;
+    }
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 2rem 0;
+    }
+    .pagination button {
+      padding: 0.5rem 1rem;
+      border: 1px solid #e2e8f0;
+      background: white;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    .pagination button.active {
+      background: #1e3a8a;
+      color: white;
+    }
+    footer {
+      background: #0f172a;
+      color: #cbd5e1;
+      padding: 2rem 0;
+      margin-top: 2rem;
+      text-align: center;
+    }
+    @media (max-width: 900px) {
+      .listings-layout {
+        flex-direction: column;
+      }
+      .filters-sidebar {
+        width: 100%;
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-container">
+    <a href="index.html" class="logo">Dominion <span>Home Hub</span></a>
+    <div class="nav-links">
+      <a href="listings.html?type=buy">Buy</a>
+      <a href="listings.html?type=rent">Rent</a>
+      <a href="listings.html?type=lease">Lease</a>
+      <button class="btn-outline" id="loginNavBtn">Log in</button>
+      <button class="btn-primary" id="signupNavBtn">Sign up</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="listings-layout">
+    <!-- Sidebar Filters -->
+    <aside class="filters-sidebar">
+      <h3>Filters</h3>
+      <div class="filter-group">
+        <label>Location</label>
+        <input type="text" id="filterLocation" placeholder="City, zip, neighborhood">
+      </div>
+      <div class="filter-group">
+        <label>Price Range</label>
+        <div class="price-range">
+          <input type="number" id="minPrice" placeholder="Min">
+          <input type="number" id="maxPrice" placeholder="Max">
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>Bedrooms</label>
+        <select id="bedrooms">
+          <option value="">Any</option>
+          <option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Bathrooms</label>
+        <select id="bathrooms">
+          <option value="">Any</option>
+          <option>1</option><option>1.5</option><option>2</option><option>2.5</option><option>3+</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Property Type</label>
+        <select id="propertyType">
+          <option value="">All</option>
+          <option>House</option><option>Apartment</option><option>Condo</option><option>Land</option>
+        </select>
+      </div>
+      <button id="applyFiltersBtn" class="btn-primary" style="width:100%">Apply Filters</button>
+    </aside>
+
+    <!-- Main Content -->
+    <main style="flex:1">
+      <!-- Map -->
+      <div id="map" class="map-container"></div>
+
+      <!-- Toolbar -->
+      <div class="results-toolbar">
+        <div><strong><span id="resultCount">0</span> properties found</strong></div>
+        <div>
+          <select id="sortBy">
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="newest">Newest First</option>
+          </select>
+        </div>
+        <div class="view-toggle">
+          <button id="gridViewBtn" class="active"><i class="fas fa-th"></i> Grid</button>
+          <button id="listViewBtn"><i class="fas fa-list"></i> List</button>
+        </div>
+      </div>
+
+      <!-- Property Results -->
+      <div id="propertyResults" class="property-grid"></div>
+
+      <!-- Pagination -->
+      <div id="paginationControls" class="pagination"></div>
+    </main>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2025 Dominion Home Hub – Find your legacy.</p>
+  </div>
+</footer>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+  // ------------------------------
+  // FIREBASE CONFIG (replace with yours)
+  // ------------------------------
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getFirestore, collection, query, where, getDocs, orderBy, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // ------------------------------
+  // SAMPLE DATA (fallback if Firebase fails or not configured)
+  // ------------------------------
+  const sampleProperties = [
+    { id: "s1", listingType: "buy", price: 875000, location: "1234 Hillside Ave, Austin, TX", bedrooms: 4, bathrooms: 3.5, area: 2850, propertyType: "House", images: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400"], lat: 30.2672, lng: -97.7431, createdAt: "2025-01-10" },
+    { id: "s2", listingType: "buy", price: 1250000, location: "56 Highland Park, Dallas, TX", bedrooms: 5, bathrooms: 4, area: 3650, propertyType: "House", images: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400"], lat: 32.7767, lng: -96.7970, createdAt: "2025-01-15" },
+    { id: "s3", listingType: "rent", price: 3200, location: "2400 Nueces St, Austin, TX", bedrooms: 2, bathrooms: 2, area: 1250, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400"], lat: 30.2850, lng: -97.7400, createdAt: "2025-01-20" },
+    { id: "s4", listingType: "lease", price: 4800, location: "555 Corporate Dr, Houston, TX", bedrooms: 3, bathrooms: 3, area: 2600, propertyType: "Condo", images: ["https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=400"], lat: 29.7604, lng: -95.3698, createdAt: "2025-02-01" }
+  ];
+
+  // Global state
+  let allProperties = [];
+  let filteredProperties = [];
+  let currentPage = 1;
+  const pageSize = 9;
+  let currentView = 'grid';
+  let map = null;
+  let markersLayer = null;
+  let currentListingType = 'buy';   // from URL param
+  let searchLocation = '';
+
+  // DOM elements
+  const resultsContainer = document.getElementById('propertyResults');
+  const resultCountSpan = document.getElementById('resultCount');
+  const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+  const sortSelect = document.getElementById('sortBy');
+  const gridViewBtn = document.getElementById('gridViewBtn');
+  const listViewBtn = document.getElementById('listViewBtn');
+  const paginationDiv = document.getElementById('paginationControls');
+
+  // Helper: get URL params
+  function getUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    currentListingType = params.get('type') || 'buy';
+    searchLocation = params.get('location') || '';
+    document.getElementById('filterLocation').value = searchLocation;
+  }
+
+  // Load properties (Firebase or sample)
+  async function loadProperties() {
+    try {
+      const q = query(collection(db, 'properties'), where('listingType', '==', currentListingType));
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } else {
+        allProperties = sampleProperties.filter(p => p.listingType === currentListingType);
+      }
+    } catch (err) {
+      console.warn("Firebase error, using sample data", err);
+      allProperties = sampleProperties.filter(p => p.listingType === currentListingType);
+    }
+    applyFiltersAndRender();
+  }
+
+  // Filtering logic
+  function applyFilters() {
+    let results = [...allProperties];
+    const locationFilter = document.getElementById('filterLocation').value.trim().toLowerCase();
+    if (locationFilter) {
+      results = results.filter(p => p.location.toLowerCase().includes(locationFilter));
+    }
+    const minPrice = parseFloat(document.getElementById('minPrice').value);
+    const maxPrice = parseFloat(document.getElementById('maxPrice').value);
+    if (!isNaN(minPrice)) results = results.filter(p => p.price >= minPrice);
+    if (!isNaN(maxPrice)) results = results.filter(p => p.price <= maxPrice);
+    const bedrooms = document.getElementById('bedrooms').value;
+    if (bedrooms) {
+      const bedVal = parseInt(bedrooms);
+      results = results.filter(p => p.bedrooms >= bedVal);
+    }
+    const bathrooms = document.getElementById('bathrooms').value;
+    if (bathrooms) {
+      const bathVal = parseFloat(bathrooms);
+      results = results.filter(p => p.bathrooms >= bathVal);
+    }
+    const propType = document.getElementById('propertyType').value;
+    if (propType) results = results.filter(p => p.propertyType === propType);
+    return results;
+  }
+
+  function sortProperties(properties) {
+    const sortValue = sortSelect.value;
+    const sorted = [...properties];
+    if (sortValue === 'price_asc') sorted.sort((a,b) => a.price - b.price);
+    else if (sortValue === 'price_desc') sorted.sort((a,b) => b.price - a.price);
+    else if (sortValue === 'newest') sorted.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return sorted;
+  }
+
+  function renderPagination(totalItems) {
+    const totalPages = Math.ceil(totalItems / pageSize);
+    paginationDiv.innerHTML = '';
+    for (let i = 1; i <= totalPages; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      if (i === currentPage) btn.classList.add('active');
+      btn.addEventListener('click', () => {
+        currentPage = i;
+        renderResults();
+        updateMapMarkers();
+      });
+      paginationDiv.appendChild(btn);
+    }
+  }
+
+  function renderResults() {
+    const sorted = sortProperties(filteredProperties);
+    const start = (currentPage - 1) * pageSize;
+    const paginated = sorted.slice(start, start + pageSize);
+    resultCountSpan.textContent = filteredProperties.length;
+    if (currentView === 'grid') {
+      resultsContainer.className = 'property-grid';
+    } else {
+      resultsContainer.className = 'property-grid list-view';
+    }
+    resultsContainer.innerHTML = paginated.map(prop => `
+      <div class="property-card" data-id="${prop.id}">
+        <div class="card-img" style="background-image: url('${prop.images?.[0] || 'https://via.placeholder.com/400'}');"></div>
+        <div class="card-content">
+          <div class="price">$${prop.price.toLocaleString()}</div>
+          <div class="address"><i class="fas fa-map-marker-alt"></i> ${prop.location}</div>
+          <div class="features">
+            <span><i class="fas fa-bed"></i> ${prop.bedrooms} beds</span>
+            <span><i class="fas fa-bath"></i> ${prop.bathrooms} baths</span>
+            <span><i class="fas fa-ruler-combined"></i> ${prop.area || 0} sqft</span>
+          </div>
+          <span class="badge">${prop.propertyType || 'Property'}</span>
+        </div>
+      </div>
+    `).join('');
+    // Attach click events to cards
+    document.querySelectorAll('.property-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const id = card.getAttribute('data-id');
+        window.location.href = `property-detail.html?id=${id}`;
+      });
+    });
+    renderPagination(filteredProperties.length);
+  }
+
+  // Leaflet Map
+  function initMap() {
+    map = L.map('map').setView([39.8283, -98.5795], 4);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> & CartoDB'
+    }).addTo(map);
+    markersLayer = L.layerGroup().addTo(map);
+  }
+
+  function updateMapMarkers() {
+    markersLayer.clearLayers();
+    const sorted = sortProperties(filteredProperties);
+    const start = (currentPage - 1) * pageSize;
+    const paginated = sorted.slice(start, start + pageSize);
+    paginated.forEach(prop => {
+      if (prop.lat && prop.lng) {
+        const marker = L.marker([prop.lat, prop.lng]).addTo(markersLayer);
+        marker.bindPopup(`
+          <b>$${prop.price.toLocaleString()}</b><br>
+          ${prop.location}<br>
+          ${prop.bedrooms} beds, ${prop.bathrooms} baths
+        `);
+      }
+    });
+    if (paginated.length && paginated[0].lat) {
+      map.setView([paginated[0].lat, paginated[0].lng], 10);
+    }
+  }
+
+  function applyFiltersAndRender() {
+    filteredProperties = applyFilters();
+    currentPage = 1;
+    renderResults();
+    updateMapMarkers();
+  }
+
+  // Event listeners
+  applyFiltersBtn.addEventListener('click', applyFiltersAndRender);
+  sortSelect.addEventListener('change', () => {
+    renderResults();
+    updateMapMarkers();
+  });
+  gridViewBtn.addEventListener('click', () => {
+    currentView = 'grid';
+    gridViewBtn.classList.add('active');
+    listViewBtn.classList.remove('active');
+    renderResults();
+  });
+  listViewBtn.addEventListener('click', () => {
+    currentView = 'list';
+    listViewBtn.classList.add('active');
+    gridViewBtn.classList.remove('active');
+    renderResults();
+  });
+
+  // Navigation buttons
+  document.getElementById('loginNavBtn')?.addEventListener('click', () => window.location.href = 'login.html');
+  document.getElementById('signupNavBtn')?.addEventListener('click', () => window.location.href = 'login.html?signup=true');
+
+  // Initialization
+  getUrlParams();
+  initMap();
+  loadProperties().then(() => {
+    applyFiltersAndRender();
+  });
+</script>
+</body>
+</html>x
