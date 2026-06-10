@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Seller Dashboard – Dominion Home Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f2937; }
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+    /* Navbar */
+    .navbar {
+      background: white;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      flex-wrap: wrap;
+    }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #1e3a8a;
+      text-decoration: none;
+    }
+    .logo span { color: #d97706; }
+    .nav-links { display: flex; gap: 1rem; align-items: center; }
+    .btn-outline {
+      border: 1.5px solid #1e3a8a;
+      background: transparent;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      color: #1e3a8a;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: #1e3a8a;
+      border: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 40px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .dashboard-title { margin: 2rem 0; text-align: center; }
+    .add-property-card, .properties-card {
+      background: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { font-weight: 600; display: block; margin-bottom: 0.5rem; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+    }
+    .image-preview {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin: 1rem 0;
+    }
+    .image-preview img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 0.5rem;
+    }
+    .property-table {
+      width: 100%;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    th { background: #f1f5f9; }
+    .edit-btn, .delete-btn {
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      border: none;
+      cursor: pointer;
+      margin: 0 0.2rem;
+    }
+    .edit-btn { background: #d97706; color: white; }
+    .delete-btn { background: #dc2626; color: white; }
+    .success { background: #dcfce7; color: #16a34a; padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 1rem; display: none; }
+    .error { background: #fee2e2; color: #dc2626; padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 1rem; display: none; }
+    footer {
+      background: #0f172a;
+      color: #cbd5e1;
+      text-align: center;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    @media (max-width: 768px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-container">
+    <a href="index.html" class="logo">Dominion <span>Home Hub</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="listings.html">Listings</a>
+      <button id="logoutBtn" class="btn-outline">Logout</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="dashboard-title">
+    <h1>Seller Dashboard</h1>
+    <p>Manage your property listings</p>
+  </div>
+
+  <div id="successMsg" class="success"></div>
+  <div id="errorMsg" class="error"></div>
+
+  <!-- Add/Edit Property Form -->
+  <div class="add-property-card">
+    <h2 id="formTitle">Add New Property</h2>
+    <input type="hidden" id="propertyId" value="">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Listing Type</label>
+        <select id="listingType">
+          <option value="buy">For Sale</option>
+          <option value="rent">For Rent</option>
+          <option value="lease">For Lease</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Price ($)</label>
+        <input type="number" id="price" placeholder="e.g., 350000">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Location</label>
+      <input type="text" id="location" placeholder="Full address">
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Bedrooms</label><input type="number" id="bedrooms" value="0"></div>
+      <div class="form-group"><label>Bathrooms</label><input type="number" step="0.5" id="bathrooms" value="0"></div>
+      <div class="form-group"><label>Area (sqft)</label><input type="number" id="area" value="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Property Type</label><select id="propertyType"><option>House</option><option>Apartment</option><option>Condo</option><option>Townhouse</option><option>Land</option></select></div>
+      <div class="form-group"><label>Status</label><select id="status"><option value="available">Available</option><option value="sold">Sold</option><option value="pending">Pending</option><option value="rented">Rented</option></select></div>
+      <div class="form-group"><label>Featured?</label><select id="isFeatured"><option value="false">No</option><option value="true">Yes</option></select></div>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="description" rows="3" placeholder="Describe the property..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Images (multiple)</label>
+      <input type="file" id="imageUpload" multiple accept="image/*">
+      <div id="imagePreview" class="image-preview"></div>
+    </div>
+    <button id="savePropertyBtn" class="btn-primary">Save Property</button>
+    <button id="cancelEditBtn" class="btn-outline" style="margin-left: 1rem;">Cancel Edit</button>
+  </div>
+
+  <!-- Existing Properties List -->
+  <div class="properties-card">
+    <h2>Your Properties</h2>
+    <div id="propertiesList" class="property-table">
+      <p>Loading properties...</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>&copy; 2025 Dominion Home Hub – Seller Dashboard</p>
+</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getDatabase, ref, set, push, get, remove, update, child, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
+    authDomain: "dominion-1e85f.firebaseapp.com",
+    databaseURL: "https://dominion-1e85f-default-rtdb.firebaseio.com",
+    projectId: "dominion-1e85f",
+    storageBucket: "dominion-1e85f.firebasestorage.app",
+    messagingSenderId: "1036601319820",
+    appId: "1:1036601319820:web:3395f663c3e05326ed76a9",
+    measurementId: "G-BZLJPTFMZ1"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+  const storage = getStorage(app);
+
+  let currentUser = null;
+  let editingPropertyId = null;
+  let existingImages = []; // for edit mode, store existing image URLs to avoid re-upload
+
+  // DOM elements
+  const formTitle = document.getElementById('formTitle');
+  const propertyIdInput = document.getElementById('propertyId');
+  const listingType = document.getElementById('listingType');
+  const price = document.getElementById('price');
+  const location = document.getElementById('location');
+  const bedrooms = document.getElementById('bedrooms');
+  const bathrooms = document.getElementById('bathrooms');
+  const area = document.getElementById('area');
+  const propertyType = document.getElementById('propertyType');
+  const status = document.getElementById('status');
+  const isFeatured = document.getElementById('isFeatured');
+  const description = document.getElementById('description');
+  const imageUpload = document.getElementById('imageUpload');
+  const imagePreview = document.getElementById('imagePreview');
+  const saveBtn = document.getElementById('savePropertyBtn');
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+  const propertiesListDiv = document.getElementById('propertiesList');
+  const successDiv = document.getElementById('successMsg');
+  const errorDiv = document.getElementById('errorMsg');
+
+  function showSuccess(msg) { successDiv.textContent = msg; successDiv.style.display = 'block'; setTimeout(() => successDiv.style.display = 'none', 4000); }
+  function showError(msg) { errorDiv.textContent = msg; errorDiv.style.display = 'block'; setTimeout(() => errorDiv.style.display = 'none', 4000); }
+
+  // Load seller's properties from Realtime Database
+  async function loadSellerProperties() {
+    if (!currentUser) return;
+    try {
+      const propertiesRef = ref(db, 'properties');
+      const q = query(propertiesRef, orderByChild('sellerId'), equalTo(currentUser.uid));
+      const snapshot = await get(q);
+      if (snapshot.exists()) {
+        const properties = [];
+        snapshot.forEach(child => {
+          properties.push({ id: child.key, ...child.val() });
+        });
+        renderPropertiesTable(properties);
+      } else {
+        propertiesListDiv.innerHTML = '<p>You haven\'t listed any properties yet. Add your first property above.</p>';
+      }
+    } catch (err) {
+      console.error(err);
+      propertiesListDiv.innerHTML = '<p>Error loading properties.</p>';
+    }
+  }
+
+  function renderPropertiesTable(properties) {
+    if (properties.length === 0) {
+      propertiesListDiv.innerHTML = '<p>No properties found.</p>';
+      return;
+    }
+    let html = `<table><thead><tr><th>Listing Type</th><th>Price</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+    properties.forEach(prop => {
+      const listingLabel = prop.listingType === 'buy' ? 'For Sale' : (prop.listingType === 'rent' ? 'For Rent' : 'For Lease');
+      html += `
+        <tr>
+          <td>${listingLabel}</td>
+          <td>${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(prop.price)}</td>
+          <td>${prop.location.substring(0, 30)}${prop.location.length > 30 ? '…' : ''}</td>
+          <td>${prop.status}</td>
+          <td><button class="edit-btn" data-id="${prop.id}">Edit</button><button class="delete-btn" data-id="${prop.id}">Delete</button></td>
+        </tr>
+      `;
+    });
+    html += `</tbody></table>`;
+    propertiesListDiv.innerHTML = html;
+
+    // Attach event listeners
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = btn.getAttribute('data-id');
+        await loadPropertyForEdit(id);
+      });
+    });
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = btn.getAttribute('data-id');
+        if (confirm('Delete this property permanently?')) {
+          await deleteProperty(id);
+        }
+      });
+    });
+  }
+
+  async function loadPropertyForEdit(propertyId) {
+    try {
+      const snapshot = await get(child(ref(db), `properties/${propertyId}`));
+      if (snapshot.exists()) {
+        const prop = snapshot.val();
+        editingPropertyId = propertyId;
+        propertyIdInput.value = propertyId;
+        listingType.value = prop.listingType;
+        price.value = prop.price;
+        location.value = prop.location;
+        bedrooms.value = prop.bedrooms;
+        bathrooms.value = prop.bathrooms;
+        area.value = prop.area;
+        propertyType.value = prop.propertyType;
+        status.value = prop.status;
+        isFeatured.value = prop.isFeatured ? 'true' : 'false';
+        description.value = prop.description || '';
+        existingImages = prop.images || [];
+        // Show existing images preview
+        imagePreview.innerHTML = '';
+        existingImages.forEach((imgUrl, idx) => {
+          const imgDiv = document.createElement('div');
+          imgDiv.style.position = 'relative';
+          imgDiv.innerHTML = `<img src="${imgUrl}" width="80" style="border-radius:8px;"><button type="button" class="remove-img" data-url="${imgUrl}" style="position:absolute; top:-8px; right:-8px; background:red; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer;">×</button>`;
+          imagePreview.appendChild(imgDiv);
+        });
+        // Attach remove handlers after rendering
+        document.querySelectorAll('.remove-img').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const url = btn.getAttribute('data-url');
+            existingImages = existingImages.filter(u => u !== url);
+            btn.parentElement.remove();
+          });
+        });
+        formTitle.textContent = 'Edit Property';
+        cancelEditBtn.style.display = 'inline-block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (err) {
+      showError('Failed to load property for edit');
+    }
+  }
+
+  async function uploadNewImages(propertyId, files) {
+    const uploadedUrls = [];
+    for (const file of files) {
+      const timestamp = Date.now();
+      const fileName = `${timestamp}_${file.name}`;
+      const imageRef = storageRef(storage, `properties/${propertyId}/${fileName}`);
+      await uploadBytes(imageRef, file);
+      const url = await getDownloadURL(imageRef);
+      uploadedUrls.push(url);
+    }
+    return uploadedUrls;
+  }
+
+  async function deleteProperty(propertyId) {
+    try {
+      // First, delete all images from Storage
+      const propSnapshot = await get(child(ref(db), `properties/${propertyId}`));
+      if (propSnapshot.exists()) {
+        const images = propSnapshot.val().images || [];
+        for (const imgUrl of images) {
+          try {
+            const imageRef = storageRef(storage, imgUrl);
+            await deleteObject(imageRef);
+          } catch (e) { console.warn('Failed to delete image', e); }
+        }
+      }
+      await remove(ref(db, `properties/${propertyId}`));
+      showSuccess('Property deleted successfully');
+      loadSellerProperties();
+    } catch (err) {
+      showError('Error deleting property');
+    }
+  }
+
+  async function saveProperty() {
+    if (!currentUser) {
+      showError('You must be logged in');
+      return;
+    }
+    const required = [listingType, price, location, bedrooms, bathrooms, area, propertyType, status];
+    if (!price.value || !location.value) {
+      showError('Please fill all required fields');
+      return;
+    }
+    const propertyData = {
+      listingType: listingType.value,
+      price: parseFloat(price.value),
+      location: location.value,
+      bedrooms: parseInt(bedrooms.value),
+      bathrooms: parseFloat(bathrooms.value),
+      area: parseFloat(area.value),
+      propertyType: propertyType.value,
+      status: status.value,
+      isFeatured: isFeatured.value === 'true',
+      description: description.value,
+      sellerId: currentUser.uid,
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      let propertyId = editingPropertyId;
+      let finalImages = [...existingImages];
+      // Handle new image uploads
+      const files = imageUpload.files;
+      if (files.length > 0) {
+        if (!propertyId) {
+          // For new property, we need a temporary ID to upload images. Create placeholder or push first then update.
+          const newRef = push(ref(db, 'properties'));
+          propertyId = newRef.key;
+          await set(newRef, { ...propertyData, images: [] });
+          propertyData.createdAt = new Date().toISOString(); // ensure
+        }
+        const newUrls = await uploadNewImages(propertyId, Array.from(files));
+        finalImages = [...finalImages, ...newUrls];
+      }
+      propertyData.images = finalImages;
+      if (editingPropertyId) {
+        await update(ref(db, `properties/${editingPropertyId}`), propertyData);
+        showSuccess('Property updated successfully');
+      } else {
+        if (!propertyId) {
+          const newRef = push(ref(db, 'properties'));
+          propertyId = newRef.key;
+        }
+        await set(ref(db, `properties/${propertyId}`), propertyData);
+        showSuccess('Property added successfully');
+      }
+      resetForm();
+      loadSellerProperties();
+    } catch (err) {
+      console.error(err);
+      showError('Error saving property');
+    }
+  }
+
+  function resetForm() {
+    editingPropertyId = null;
+    propertyIdInput.value = '';
+    listingType.value = 'buy';
+    price.value = '';
+    location.value = '';
+    bedrooms.value = '0';
+    bathrooms.value = '0';
+    area.value = '0';
+    propertyType.value = 'House';
+    status.value = 'available';
+    isFeatured.value = 'false';
+    description.value = '';
+    imageUpload.value = '';
+    imagePreview.innerHTML = '';
+    existingImages = [];
+    formTitle.textContent = 'Add New Property';
+    cancelEditBtn.style.display = 'none';
+  }
+
+  cancelEditBtn.addEventListener('click', resetForm);
+  saveBtn.addEventListener('click', saveProperty);
+
+  // Authentication check
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = 'login.html?redirect=dashboard.html';
+      return;
+    }
+    currentUser = user;
+    // Check user role from database
+    const roleSnapshot = await get(child(ref(db), `users/${user.uid}/role`));
+    if (!roleSnapshot.exists() || roleSnapshot.val() !== 'seller') {
+      await signOut(auth);
+      showError('You are not authorized as a seller. Please log in with a seller account.');
+      setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+      return;
+    }
+    // Load seller's properties
+    loadSellerProperties();
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await signOut(auth);
+    window.location.href = 'index.html';
+  });
+
+  // Preview new images
+  imageUpload.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const imgDiv = document.createElement('div');
+        imgDiv.style.position = 'relative';
+        imgDiv.innerHTML = `<img src="${ev.target.result}" width="80" style="border-radius:8px; margin-right:5px;"><button type="button" class="remove-new-img" style="position:absolute; top:-8px; right:-8px; background:red; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer;">×</button>`;
+        imagePreview.appendChild(imgDiv);
+        imgDiv.querySelector('.remove-new-img').addEventListener('click', () => {
+          imgDiv.remove();
+          // Note: we cannot easily remove from FileList, but we can rebuild list later; this preview removal is just UI.
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+</script>
+</body>
+</html>
