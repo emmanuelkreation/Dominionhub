@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>RealEstateHub – Find Your Dream Property</title>
+  <title>Dominion Home Hub – Find Your Dream Property</title>
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
-  <!-- Font Awesome 6 (free icons) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     * {
@@ -17,7 +17,7 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #f9fafb;
+      background-color: #ffffff;
       color: #1f2937;
       line-height: 1.5;
     }
@@ -31,8 +31,9 @@
 
     /* Navigation */
     .navbar {
-      background: white;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      background: rgba(255,255,255,0.98);
+      backdrop-filter: blur(4px);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
       position: sticky;
       top: 0;
       z-index: 100;
@@ -47,11 +48,12 @@
     .logo {
       font-size: 1.8rem;
       font-weight: 800;
-      color: #2563eb;
+      color: #1e3a8a;
       text-decoration: none;
+      letter-spacing: -0.5px;
     }
     .logo span {
-      color: #f59e0b;
+      color: #d97706;
     }
     .nav-links {
       display: flex;
@@ -65,24 +67,24 @@
       transition: color 0.2s;
     }
     .nav-links a:hover {
-      color: #2563eb;
+      color: #1e3a8a;
     }
     .btn-outline {
-      border: 1px solid #2563eb;
+      border: 1.5px solid #1e3a8a;
       background: transparent;
       padding: 0.5rem 1.2rem;
       border-radius: 40px;
-      color: #2563eb;
+      color: #1e3a8a;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
     }
     .btn-outline:hover {
-      background: #2563eb;
+      background: #1e3a8a;
       color: white;
     }
     .btn-primary {
-      background: #2563eb;
+      background: #1e3a8a;
       border: none;
       padding: 0.5rem 1.5rem;
       border-radius: 40px;
@@ -92,24 +94,28 @@
       transition: background 0.2s;
     }
     .btn-primary:hover {
-      background: #1d4ed8;
+      background: #2563eb;
     }
 
-    /* Hero Section */
+    /* Hero with background image */
     .hero {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      padding: 3rem 0 4rem;
+      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1560518883-ce09059eeffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
+      background-size: cover;
+      background-position: center 30%;
+      padding: 5rem 0 6rem;
       color: white;
     }
     .hero h1 {
-      font-size: 2.5rem;
+      font-size: 3rem;
       font-weight: 800;
       margin-bottom: 1rem;
       text-align: center;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     .hero p {
       text-align: center;
-      opacity: 0.9;
+      font-size: 1.2rem;
+      opacity: 0.95;
       margin-bottom: 2rem;
     }
     .search-card {
@@ -121,7 +127,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
-      box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2);
+      box-shadow: 0 20px 35px -10px rgba(0,0,0,0.3);
     }
     .search-card input {
       flex: 3;
@@ -133,7 +139,7 @@
     }
     .search-card button {
       flex: 1;
-      background: #2563eb;
+      background: #d97706;
       border: none;
       border-radius: 60px;
       color: white;
@@ -143,7 +149,7 @@
       padding: 0 1.5rem;
     }
     .search-card button:hover {
-      background: #1d4ed8;
+      background: #b45309;
     }
     .tabs {
       display: flex;
@@ -152,7 +158,8 @@
       margin-top: 2rem;
     }
     .tab-btn {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(4px);
       border: none;
       padding: 0.6rem 1.8rem;
       border-radius: 40px;
@@ -162,74 +169,98 @@
       transition: 0.2s;
     }
     .tab-btn.active {
-      background: #2563eb;
+      background: #d97706;
       color: white;
     }
-
-    /* Featured Section */
-    .section-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      margin: 2.5rem 0 1rem;
-      text-align: center;
+    .tab-btn:hover {
+      background: rgba(255,255,255,0.4);
     }
+
+    /* Section title */
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 3rem 0 1.5rem;
+      text-align: center;
+      position: relative;
+    }
+    .section-title:after {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 3px;
+      background: #d97706;
+      margin: 0.8rem auto 0;
+      border-radius: 2px;
+    }
+
+    /* Property Grid */
     .property-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 2rem;
-      margin-top: 1.5rem;
+      margin-top: 1rem;
     }
     .property-card {
       background: white;
-      border-radius: 1rem;
+      border-radius: 1.2rem;
       overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 10px 20px -5px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
       cursor: pointer;
+      border: 1px solid #f0f0f0;
     }
     .property-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 20px 25px -12px rgba(0,0,0,0.1);
+      transform: translateY(-8px);
+      box-shadow: 0 25px 35px -12px rgba(0,0,0,0.15);
     }
     .card-img {
-      height: 220px;
+      height: 240px;
       background-size: cover;
       background-position: center;
-      background-color: #e5e7eb;
+      transition: transform 0.4s ease;
+    }
+    .property-card:hover .card-img {
+      transform: scale(1.02);
     }
     .card-content {
-      padding: 1rem;
+      padding: 1.2rem;
     }
     .price {
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       font-weight: 800;
-      color: #2563eb;
+      color: #1e3a8a;
     }
     .address {
       color: #6b7280;
       margin: 0.3rem 0;
       font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
     }
     .features {
       display: flex;
-      gap: 1rem;
+      gap: 1.2rem;
       margin: 0.8rem 0;
       font-size: 0.85rem;
       color: #4b5563;
     }
     .features i {
       margin-right: 0.3rem;
+      color: #d97706;
     }
     .badge {
       display: inline-block;
-      background: #f3f4f6;
-      padding: 0.2rem 0.8rem;
+      background: #eef2ff;
+      padding: 0.3rem 0.9rem;
       border-radius: 30px;
-      font-size: 0.75rem;
-      font-weight: 600;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #1e3a8a;
     }
 
-    /* CTA section */
+    /* CTA cards */
     .cta-grid {
       display: flex;
       flex-wrap: wrap;
@@ -238,23 +269,30 @@
       margin: 3rem 0;
     }
     .cta-card {
-      background: white;
-      border-radius: 1rem;
+      background: #f8fafc;
+      border-radius: 1.5rem;
       padding: 2rem;
       text-align: center;
       flex: 1;
-      min-width: 200px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      min-width: 220px;
+      transition: all 0.2s;
+      border: 1px solid #e2e8f0;
+    }
+    .cta-card:hover {
+      background: white;
+      box-shadow: 0 15px 25px -10px rgba(0,0,0,0.1);
     }
     .cta-card i {
       font-size: 2.5rem;
-      color: #2563eb;
+      color: #d97706;
       margin-bottom: 1rem;
     }
+
+    /* Why Us */
     .why-us {
-      background: white;
-      border-radius: 1rem;
-      padding: 2rem;
+      background: #f1f5f9;
+      border-radius: 2rem;
+      padding: 2.5rem;
       margin: 2rem 0;
       text-align: center;
     }
@@ -269,13 +307,84 @@
       flex: 1;
       min-width: 180px;
     }
+    .why-item i {
+      font-size: 2rem;
+      color: #1e3a8a;
+      margin-bottom: 0.8rem;
+    }
 
+    /* Professional Footer */
     footer {
-      background: #111827;
-      color: #9ca3af;
+      background: #0f172a;
+      color: #cbd5e1;
+      margin-top: 4rem;
+      padding: 3rem 0 1.5rem;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    .footer-col h4 {
+      color: white;
+      font-size: 1.1rem;
+      margin-bottom: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .footer-col p, .footer-col a {
+      color: #94a3b8;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 0.6rem;
+      transition: color 0.2s;
+    }
+    .footer-col a:hover {
+      color: #d97706;
+    }
+    .social-icons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .social-icons a {
+      background: #1e293b;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .social-icons a:hover {
+      background: #d97706;
+      color: white;
+    }
+    .newsletter input {
+      width: 100%;
+      padding: 0.7rem;
+      border-radius: 40px;
+      border: none;
+      margin-bottom: 0.8rem;
+      background: #1e293b;
+      color: white;
+    }
+    .newsletter button {
+      background: #d97706;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 40px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .copyright {
       text-align: center;
-      padding: 2rem;
-      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid #1e293b;
+      font-size: 0.8rem;
     }
 
     @media (max-width: 768px) {
@@ -283,17 +392,17 @@
         flex-direction: column;
         gap: 1rem;
       }
+      .hero h1 {
+        font-size: 2rem;
+      }
       .search-card {
-        border-radius: 2rem;
         flex-direction: column;
+        border-radius: 2rem;
       }
       .search-card input, .search-card button {
         width: 100%;
         border-radius: 2rem;
         padding: 0.8rem;
-      }
-      .hero h1 {
-        font-size: 1.8rem;
       }
     }
   </style>
@@ -302,7 +411,7 @@
 
 <nav class="navbar">
   <div class="container nav-container">
-    <a href="#" class="logo">RealEstate<span>Hub</span></a>
+    <a href="#" class="logo">Dominion <span>Home Hub</span></a>
     <div class="nav-links">
       <a href="#">Buy</a>
       <a href="#">Rent</a>
@@ -315,10 +424,10 @@
 
 <section class="hero">
   <div class="container">
-    <h1>Find your perfect place</h1>
-    <p>Search from thousands of homes – for sale or rent</p>
+    <h1>Your Legacy Starts Here</h1>
+    <p>Premium homes, luxury rentals, and investment properties</p>
     <div class="search-card">
-      <input type="text" id="searchLocation" placeholder="Enter city, zip code, or neighborhood...">
+      <input type="text" id="searchLocation" placeholder="Search by city, zip code, or neighborhood...">
       <button id="searchBtn">Search →</button>
     </div>
     <div class="tabs">
@@ -330,65 +439,103 @@
 </section>
 
 <div class="container">
-  <div class="section-title">✨ Featured Properties</div>
+  <div class="section-title">🔥 Featured Listings</div>
   <div id="featuredGrid" class="property-grid">
-    <!-- JavaScript will populate this -->
-    <div style="text-align:center; grid-column:1/-1;">Loading featured listings...</div>
+    <!-- JavaScript will inject property cards here -->
+    <div style="text-align:center; grid-column:1/-1;">Loading exceptional properties...</div>
   </div>
 
   <!-- Quick action cards -->
   <div class="cta-grid">
     <div class="cta-card" id="listPropCard">
-      <i class="fas fa-plus-circle"></i>
+      <i class="fas fa-home"></i>
       <h3>List Your Property</h3>
-      <p>Reach thousands of potential buyers or tenants.</p>
+      <p>Reach thousands of serious buyers & tenants.</p>
       <button class="btn-primary" style="margin-top:1rem;">Get started</button>
     </div>
     <div class="cta-card" id="findAgentCard">
-      <i class="fas fa-user-tie"></i>
-      <h3>Find an Agent</h3>
-      <p>Connect with top local real estate agents.</p>
+      <i class="fas fa-handshake"></i>
+      <h3>Agent Partnership</h3>
+      <p>Work with top‑rated local agents.</p>
       <button class="btn-primary" style="margin-top:1rem;">Learn more</button>
     </div>
     <div class="cta-card" id="mortgageCard">
-      <i class="fas fa-calculator"></i>
-      <h3>Mortgage Calculator</h3>
-      <p>Estimate your monthly payments instantly.</p>
+      <i class="fas fa-chart-line"></i>
+      <h3>Mortgage Center</h3>
+      <p>Calculate payments & get pre‑approved.</p>
       <button class="btn-primary" style="margin-top:1rem;">Calculate</button>
     </div>
   </div>
 
   <!-- Why Choose Us -->
   <div class="why-us">
-    <h2>Why Choose RealEstateHub?</h2>
+    <h2>Why Dominion Home Hub?</h2>
     <div class="why-items">
       <div class="why-item">
-        <i class="fas fa-check-circle" style="font-size:2rem; color:#2563eb;"></i>
+        <i class="fas fa-check-circle"></i>
         <h3>Zero Commission</h3>
-        <p>No hidden fees for buyers – direct contact with sellers.</p>
+        <p>No hidden fees for buyers – direct owner contact.</p>
       </div>
       <div class="why-item">
-        <i class="fas fa-chart-line"></i>
-        <h3>Real-time Analytics</h3>
-        <p>Sellers get insights on views and inquiries.</p>
+        <i class="fas fa-chart-simple"></i>
+        <h3>Smart Analytics</h3>
+        <p>Real‑time views & lead tracking for sellers.</p>
       </div>
       <div class="why-item">
-        <i class="fas fa-shield-alt"></i>
-        <h3>Secure Messaging</h3>
-        <p>Built-in chat with read receipts.</p>
+        <i class="fas fa-shield-heart"></i>
+        <h3>Secure Transactions</h3>
+        <p>Verified listings & encrypted messaging.</p>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Professional Footer -->
 <footer>
-  <p>&copy; 2025 RealEstateHub – Find your dream home. All rights reserved.</p>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <h4>Dominion Home Hub</h4>
+        <p>Premium real estate marketplace connecting buyers and sellers with transparency and trust.</p>
+        <div class="social-icons">
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-x-twitter"></i></a>
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Explore</h4>
+        <a href="#">Buy</a>
+        <a href="#">Rent</a>
+        <a href="#">Lease</a>
+        <a href="#">Sell your property</a>
+        <a href="#">Agent directory</a>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <a href="#">Mortgage calculator</a>
+        <a href="#">Neighborhood guides</a>
+        <a href="#">Blog & market news</a>
+        <a href="#">FAQ</a>
+        <a href="#">Contact us</a>
+      </div>
+      <div class="footer-col newsletter">
+        <h4>Newsletter</h4>
+        <p>Get new listings and market insights.</p>
+        <input type="email" placeholder="Your email address">
+        <button>Subscribe</button>
+      </div>
+    </div>
+    <div class="copyright">
+      &copy; 2025 Dominion Home Hub. All rights reserved. | 1212 Estate Drive, Austin, TX | <a href="#" style="color:#94a3b8;">Privacy Policy</a>
+    </div>
+  </div>
 </footer>
 
-<!-- 🔥 Firebase SDK + Config (replace with your own!) -->
+<!-- Firebase + Sample Data Integration (for demo, includes hardcoded + Firebase fallback) -->
 <script type="module">
-  // ========== FIREBASE CONFIGURATION ==========
-  // TODO: Replace this object with your own Firebase project config
+  // ========== FIREBASE CONFIG (Replace with your own) ==========
   const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_AUTH_DOMAIN",
@@ -398,12 +545,10 @@
     appId: "YOUR_APP_ID"
   };
 
-  // Import Firebase modules
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getFirestore, collection, query, where, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
   import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
-  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
@@ -413,122 +558,131 @@
   const searchLocationInput = document.getElementById('searchLocation');
   const searchBtn = document.getElementById('searchBtn');
   const tabBtns = document.querySelectorAll('.tab-btn');
-  let currentListingType = 'buy';   // 'buy', 'rent', 'lease'
+  let currentListingType = 'buy';
 
-  // Helper: format price
+  // High-quality sample properties (12 listings with real images)
+  const sampleProperties = {
+    buy: [
+      { id: "b1", price: 875000, location: "1234 Hillside Ave, Austin, TX 78701", bedrooms: 4, bathrooms: 3.5, area: 2850, status: "available", images: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&auto=format"], listingType: "buy", isFeatured: true },
+      { id: "b2", price: 1250000, location: "56 Highland Park, Dallas, TX 75205", bedrooms: 5, bathrooms: 4, area: 3650, status: "available", images: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&auto=format"], listingType: "buy", isFeatured: true },
+      { id: "b3", price: 450000, location: "789 Oak St, Houston, TX 77002", bedrooms: 3, bathrooms: 2, area: 1950, status: "available", images: ["https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&auto=format"], listingType: "buy", isFeatured: true },
+      { id: "b4", price: 1899000, location: "12 Royal Palm, Miami, FL 33139", bedrooms: 6, bathrooms: 5.5, area: 5200, status: "available", images: ["https://images.unsplash.com/photo-1613977257365-aaae5a9817ff?w=600&auto=format"], listingType: "buy", isFeatured: true }
+    ],
+    rent: [
+      { id: "r1", price: 3200, location: "2400 Nueces St, Austin, TX 78705", bedrooms: 2, bathrooms: 2, area: 1250, status: "available", images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&auto=format"], listingType: "rent", isFeatured: true },
+      { id: "r2", price: 1850, location: "4500 Medical Pkwy, Dallas, TX 75204", bedrooms: 1, bathrooms: 1, area: 780, status: "available", images: ["https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&auto=format"], listingType: "rent", isFeatured: true },
+      { id: "r3", price: 5600, location: "1010 Post Oak Blvd, Houston, TX 77056", bedrooms: 3, bathrooms: 2.5, area: 2100, status: "available", images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format"], listingType: "rent", isFeatured: true },
+      { id: "r4", price: 4200, location: "77 Seaport Blvd, Boston, MA 02210", bedrooms: 2, bathrooms: 2, area: 1450, status: "available", images: ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&auto=format"], listingType: "rent", isFeatured: true }
+    ],
+    lease: [
+      { id: "l1", price: 4800, location: "555 Corporate Dr, Houston, TX 77079", bedrooms: 3, bathrooms: 3, area: 2600, status: "available", images: ["https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=600&auto=format"], listingType: "lease", isFeatured: true },
+      { id: "l2", price: 6200, location: "1001 Lakeside, Seattle, WA 98101", bedrooms: 4, bathrooms: 3.5, area: 3100, status: "available", images: ["https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&auto=format"], listingType: "lease", isFeatured: true },
+      { id: "l3", price: 3950, location: "2020 Union St, San Francisco, CA 94123", bedrooms: 2, bathrooms: 2, area: 1400, status: "available", images: ["https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600&auto=format"], listingType: "lease", isFeatured: true },
+      { id: "l4", price: 8900, location: "1 Rodeo Dr, Beverly Hills, CA 90210", bedrooms: 5, bathrooms: 4, area: 4500, status: "available", images: ["https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&auto=format"], listingType: "lease", isFeatured: true }
+    ]
+  };
+
   function formatPrice(price) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price);
   }
 
-  // Render featured properties based on listingType
-  async function loadFeaturedProperties() {
-    featuredGrid.innerHTML = '<div style="text-align:center; grid-column:1/-1;">Loading featured listings...</div>';
-    try {
-      // We assume each property has a field `listingType` (buy/rent/lease) and `isFeatured` boolean.
-      // In a real setup you may also query for premium listings first.
-      const propertiesRef = collection(db, 'properties');
-      // Query: where listingType == currentListingType, isFeatured == true, limit 6
-      let q = query(
-        propertiesRef,
-        where('listingType', '==', currentListingType),
-        where('isFeatured', '==', true),
-        limit(6)
-      );
-      const querySnapshot = await getDocs(q);
-      
-      if (querySnapshot.empty) {
-        featuredGrid.innerHTML = '<div style="text-align:center; grid-column:1/-1;">No featured properties at the moment. Check back soon!</div>';
-        return;
-      }
-
-      let cardsHTML = '';
-      querySnapshot.forEach(doc => {
-        const prop = doc.data();
-        const propId = doc.id;
-        const imageUrl = prop.images && prop.images.length > 0 ? prop.images[0] : 'https://via.placeholder.com/400x250?text=No+Image';
-        cardsHTML += `
-          <div class="property-card" data-id="${propId}">
-            <div class="card-img" style="background-image: url('${imageUrl}');"></div>
-            <div class="card-content">
-              <div class="price">${formatPrice(prop.price)}</div>
-              <div class="address">${prop.location || 'Location not specified'}</div>
-              <div class="features">
-                <span><i class="fas fa-bed"></i> ${prop.bedrooms || 0} beds</span>
-                <span><i class="fas fa-bath"></i> ${prop.bathrooms || 0} baths</span>
-                <span><i class="fas fa-ruler-combined"></i> ${prop.area || 0} sqft</span>
-              </div>
-              <span class="badge">${prop.status === 'available' ? 'Available' : prop.status || 'For ' + currentListingType}</span>
+  function renderProperties(properties) {
+    if (!properties.length) {
+      featuredGrid.innerHTML = '<div style="text-align:center; grid-column:1/-1;">No featured properties at the moment.</div>';
+      return;
+    }
+    let cardsHTML = '';
+    properties.forEach(prop => {
+      const imageUrl = prop.images && prop.images[0] ? prop.images[0] : 'https://via.placeholder.com/600x400?text=Dominion+Home';
+      cardsHTML += `
+        <div class="property-card" data-id="${prop.id}">
+          <div class="card-img" style="background-image: url('${imageUrl}');"></div>
+          <div class="card-content">
+            <div class="price">${formatPrice(prop.price)}</div>
+            <div class="address"><i class="fas fa-map-pin"></i> ${prop.location}</div>
+            <div class="features">
+              <span><i class="fas fa-bed"></i> ${prop.bedrooms} beds</span>
+              <span><i class="fas fa-bath"></i> ${prop.bathrooms} baths</span>
+              <span><i class="fas fa-ruler-combined"></i> ${prop.area} sqft</span>
             </div>
+            <span class="badge">${prop.status === 'available' ? 'Available' : prop.status}</span>
           </div>
-        `;
+        </div>
+      `;
+    });
+    featuredGrid.innerHTML = cardsHTML;
+    document.querySelectorAll('.property-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const id = card.getAttribute('data-id');
+        window.location.href = `property-detail.html?id=${id}`;
       });
-      featuredGrid.innerHTML = cardsHTML;
+    });
+  }
 
-      // Add click event to each card (go to property detail page)
-      document.querySelectorAll('.property-card').forEach(card => {
-        card.addEventListener('click', () => {
-          const id = card.getAttribute('data-id');
-          window.location.href = `property-detail.html?id=${id}`;
+  async function loadFeaturedProperties() {
+    featuredGrid.innerHTML = '<div style="text-align:center; grid-column:1/-1;">Loading exceptional properties...</div>';
+    try {
+      // Attempt to fetch from Firebase (if configured and data exists)
+      const propertiesRef = collection(db, 'properties');
+      const q = query(propertiesRef, where('listingType', '==', currentListingType), where('isFeatured', '==', true), limit(6));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        const firebaseProps = [];
+        querySnapshot.forEach(doc => {
+          firebaseProps.push({ id: doc.id, ...doc.data() });
         });
-      });
+        renderProperties(firebaseProps);
+      } else {
+        // Fallback to sample data
+        const sampleList = sampleProperties[currentListingType] || [];
+        renderProperties(sampleList);
+      }
     } catch (error) {
-      console.error("Error loading featured properties:", error);
-      featuredGrid.innerHTML = '<div style="text-align:center; grid-column:1/-1;">Failed to load properties. Check console or Firebase config.</div>';
+      console.warn("Firebase not ready or error, using sample data:", error);
+      const sampleList = sampleProperties[currentListingType] || [];
+      renderProperties(sampleList);
     }
   }
 
-  // Tab switching
   function setActiveTab(selectedType) {
     currentListingType = selectedType;
     tabBtns.forEach(btn => {
-      const btnType = btn.getAttribute('data-type');
-      if (btnType === selectedType) {
-        btn.classList.add('active');
-      } else {
-        btn.classList.remove('active');
-      }
+      btn.classList.toggle('active', btn.getAttribute('data-type') === selectedType);
     });
     loadFeaturedProperties();
   }
 
   tabBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const type = e.currentTarget.getAttribute('data-type');
-      setActiveTab(type);
+      setActiveBtn(e.currentTarget.getAttribute('data-type'));
     });
   });
 
-  // Search functionality
+  // Helper to avoid duplicate
+  window.setActiveBtn = function(type) {
+    currentListingType = type;
+    tabBtns.forEach(btn => {
+      if (btn.getAttribute('data-type') === type) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+    loadFeaturedProperties();
+  };
+
   searchBtn.addEventListener('click', () => {
     const location = searchLocationInput.value.trim();
     if (location) {
-      // Redirect to listings page with query params
       window.location.href = `listings.html?location=${encodeURIComponent(location)}&type=${currentListingType}`;
     } else {
-      alert("Please enter a location (city, zip, or neighborhood)");
+      alert("Please enter a location (city, zip code, or neighborhood).");
     }
   });
 
-  // Navigation buttons (redirects)
-  document.getElementById('loginNavBtn')?.addEventListener('click', () => {
-    window.location.href = 'login.html';
-  });
-  document.getElementById('signupNavBtn')?.addEventListener('click', () => {
-    window.location.href = 'login.html?signup=true';
-  });
-  document.getElementById('sellNavBtn')?.addEventListener('click', () => {
-    // If not logged in, go to login; but for MVP we redirect to login
-    window.location.href = 'login.html?redirect=dashboard';
-  });
-  document.getElementById('listPropCard')?.querySelector('button')?.addEventListener('click', () => {
-    window.location.href = 'login.html?redirect=dashboard';
-  });
-  document.getElementById('findAgentCard')?.querySelector('button')?.addEventListener('click', () => {
-    alert("Agent finder coming soon! Stay tuned.");
-  });
-  document.getElementById('mortgageCard')?.querySelector('button')?.addEventListener('click', () => {
-    alert("Mortgage calculator will be available on property detail pages.");
-  });
+  document.getElementById('loginNavBtn')?.addEventListener('click', () => window.location.href = 'login.html');
+  document.getElementById('signupNavBtn')?.addEventListener('click', () => window.location.href = 'login.html?signup=true');
+  document.getElementById('sellNavBtn')?.addEventListener('click', () => window.location.href = 'login.html?redirect=dashboard');
+  document.getElementById('listPropCard')?.querySelector('button')?.addEventListener('click', () => window.location.href = 'login.html?redirect=dashboard');
+  document.getElementById('findAgentCard')?.querySelector('button')?.addEventListener('click', () => alert("Agent partnership portal coming soon."));
+  document.getElementById('mortgageCard')?.querySelector('button')?.addEventListener('click', () => alert("Mortgage calculator will be available on property detail pages."));
 
   // Initial load
   loadFeaturedProperties();
