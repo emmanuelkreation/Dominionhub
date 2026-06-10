@@ -99,7 +99,7 @@
 
     /* Hero Section */
     .hero {
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://i.pinimg.com/1200x/a5/bf/3c/a5bf3cb953b15cec09e2feb363307cf8.jpg?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
+      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1560518883-ce09059eeffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
       background-size: cover;
       background-position: center 30%;
       padding: 5rem 0 6rem;
@@ -145,6 +145,9 @@
       cursor: pointer;
       padding: 0 1.5rem;
     }
+    .search-card button:hover {
+      background: #b45309;
+    }
     .tabs {
       display: flex;
       justify-content: center;
@@ -160,9 +163,13 @@
       color: white;
       font-weight: 600;
       cursor: pointer;
+      transition: 0.2s;
     }
     .tab-btn.active {
       background: #d97706;
+    }
+    .tab-btn:hover {
+      background: rgba(255,255,255,0.4);
     }
 
     /* Section Titles */
@@ -179,6 +186,7 @@
       height: 3px;
       background: #d97706;
       margin: 0.8rem auto 0;
+      border-radius: 2px;
     }
 
     /* Property Grid */
@@ -205,6 +213,10 @@
       height: 220px;
       background-size: cover;
       background-position: center;
+      transition: transform 0.4s ease;
+    }
+    .property-card:hover .card-img {
+      transform: scale(1.02);
     }
     .card-content {
       padding: 1.2rem;
@@ -251,8 +263,12 @@
       font-weight: 600;
       margin-left: 0.5rem;
     }
-    .listing-type-badge.rent { background: #d97706; }
-    .listing-type-badge.lease { background: #10b981; }
+    .listing-type-badge.rent {
+      background: #d97706;
+    }
+    .listing-type-badge.lease {
+      background: #10b981;
+    }
 
     .view-all {
       text-align: center;
@@ -278,7 +294,7 @@
       text-align: center;
       flex: 1;
       min-width: 220px;
-      transition: 0.2s;
+      transition: all 0.2s;
       border: 1px solid #e2e8f0;
     }
     .cta-card:hover {
@@ -356,6 +372,10 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      transition: background 0.2s;
+    }
+    .social-icons a:hover {
+      background: #d97706;
     }
     .newsletter input {
       width: 100%;
@@ -373,6 +393,7 @@
       border-radius: 40px;
       color: white;
       cursor: pointer;
+      font-weight: 600;
     }
     .copyright {
       text-align: center;
@@ -381,10 +402,22 @@
       font-size: 0.8rem;
     }
     @media (max-width: 768px) {
-      .hero h1 { font-size: 2rem; }
-      .search-card { flex-direction: column; border-radius: 2rem; }
-      .search-card input, .search-card button { width: 100%; border-radius: 2rem; }
-      .nav-container { flex-direction: column; gap: 1rem; }
+      .hero h1 {
+        font-size: 2rem;
+      }
+      .search-card {
+        flex-direction: column;
+        border-radius: 2rem;
+      }
+      .search-card input, .search-card button {
+        width: 100%;
+        border-radius: 2rem;
+        padding: 0.8rem;
+      }
+      .nav-container {
+        flex-direction: column;
+        gap: 1rem;
+      }
     }
   </style>
 </head>
@@ -424,22 +457,20 @@
 </section>
 
 <div class="container">
-  <!-- Featured Properties Section -->
   <div class="section-title">🔥 Featured Listings</div>
   <div id="featuredGrid" class="property-grid">
     <div style="text-align:center; grid-column:1/-1;">Loading featured properties...</div>
   </div>
 
-  <!-- Latest Properties Section (More Listings) -->
   <div class="section-title">🏠 Latest Properties Added</div>
   <div id="latestGrid" class="property-grid">
     <div style="text-align:center; grid-column:1/-1;">Loading latest properties...</div>
   </div>
+
   <div class="view-all">
     <button class="btn-primary" id="viewAllListingsBtn">View All Listings →</button>
   </div>
 
-  <!-- Quick Action Cards -->
   <div class="cta-grid">
     <div class="cta-card" id="listPropCard">
       <i class="fas fa-home"></i>
@@ -461,7 +492,6 @@
     </div>
   </div>
 
-  <!-- Why Choose Us -->
   <div class="why-us">
     <h2>Why Dominion Home Hub?</h2>
     <div class="why-items">
@@ -514,69 +544,56 @@
 </footer>
 
 <script type="module">
-  // Firebase Config (replace with yours)
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-  };
-
+  // ========== FIREBASE REALTIME DATABASE SETUP ==========
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getDatabase, ref, query, orderByChild, equalTo, get, limitToFirst } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
   import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
+  const firebaseConfig = {
+    apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
+    authDomain: "dominion-1e85f.firebaseapp.com",
+    databaseURL: "https://dominion-1e85f-default-rtdb.firebaseio.com",
+    projectId: "dominion-1e85f",
+    storageBucket: "dominion-1e85f.firebasestorage.app",
+    messagingSenderId: "1036601319820",
+    appId: "1:1036601319820:web:3395f663c3e05326ed76a9",
+    measurementId: "G-BZLJPTFMZ1"
+  };
+
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const db = getDatabase(app);
   const auth = getAuth(app);
+  console.log("Firebase Realtime Database initialized");
 
-  // Expanded sample data (20 properties as before)
-  const allSampleProperties = [
-    { id: "b1", listingType: "buy", price: 875000, location: "1234 Hillside Ave, Austin, TX", bedrooms: 4, bathrooms: 3.5, area: 2850, propertyType: "House", images: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600"], createdAt: "2025-01-10", isFeatured: true },
-    { id: "b2", listingType: "buy", price: 1250000, location: "56 Highland Park, Dallas, TX", bedrooms: 5, bathrooms: 4, area: 3650, propertyType: "House", images: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600"], createdAt: "2025-01-15", isFeatured: true },
-    { id: "b3", listingType: "buy", price: 450000, location: "789 Oak St, Houston, TX", bedrooms: 3, bathrooms: 2, area: 1950, propertyType: "Townhouse", images: ["https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600"], createdAt: "2025-01-20", isFeatured: false },
-    { id: "b4", listingType: "buy", price: 1899000, location: "12 Royal Palm, Miami, FL", bedrooms: 6, bathrooms: 5.5, area: 5200, propertyType: "House", images: ["https://images.unsplash.com/photo-1613977257365-aaae5a9817ff?w=600"], createdAt: "2025-02-01", isFeatured: true },
-    { id: "b5", listingType: "buy", price: 675000, location: "2020 Cherry Creek, Denver, CO", bedrooms: 3, bathrooms: 2.5, area: 2200, propertyType: "Condo", images: ["https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600"], createdAt: "2025-02-05", isFeatured: false },
-    { id: "b6", listingType: "buy", price: 350000, location: "1500 Main St, Kansas City, MO", bedrooms: 2, bathrooms: 2, area: 1400, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600"], createdAt: "2025-02-10", isFeatured: false },
-    { id: "b7", listingType: "buy", price: 2200000, location: "1 Ocean Drive, Malibu, CA", bedrooms: 5, bathrooms: 5, area: 4800, propertyType: "House", images: ["https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=600"], createdAt: "2025-02-12", isFeatured: false },
-    { id: "b8", listingType: "buy", price: 549000, location: "3300 Peachtree Rd, Atlanta, GA", bedrooms: 3, bathrooms: 2, area: 1800, propertyType: "Condo", images: ["https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600"], createdAt: "2025-02-15", isFeatured: false },
-    { id: "r1", listingType: "rent", price: 3200, location: "2400 Nueces St, Austin, TX", bedrooms: 2, bathrooms: 2, area: 1250, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600"], createdAt: "2025-01-18", isFeatured: true },
-    { id: "r2", listingType: "rent", price: 1850, location: "4500 Medical Pkwy, Dallas, TX", bedrooms: 1, bathrooms: 1, area: 780, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600"], createdAt: "2025-01-22", isFeatured: false },
-    { id: "r3", listingType: "rent", price: 5600, location: "1010 Post Oak Blvd, Houston, TX", bedrooms: 3, bathrooms: 2.5, area: 2100, propertyType: "Condo", images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600"], createdAt: "2025-01-28", isFeatured: true },
-    { id: "r4", listingType: "rent", price: 4200, location: "77 Seaport Blvd, Boston, MA", bedrooms: 2, bathrooms: 2, area: 1450, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600"], createdAt: "2025-02-02", isFeatured: false },
-    { id: "r5", listingType: "rent", price: 2300, location: "500 W Madison, Chicago, IL", bedrooms: 1, bathrooms: 1, area: 850, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1494526585095-c41746248156?w=600"], createdAt: "2025-02-07", isFeatured: false },
-    { id: "r6", listingType: "rent", price: 3950, location: "1200 Alameda, Seattle, WA", bedrooms: 2, bathrooms: 2, area: 1100, propertyType: "Condo", images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600"], createdAt: "2025-02-11", isFeatured: false },
-    { id: "l1", listingType: "lease", price: 4800, location: "555 Corporate Dr, Houston, TX", bedrooms: 3, bathrooms: 3, area: 2600, propertyType: "Townhouse", images: ["https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=600"], createdAt: "2025-01-25", isFeatured: true },
-    { id: "l2", listingType: "lease", price: 6200, location: "1001 Lakeside, Seattle, WA", bedrooms: 4, bathrooms: 3.5, area: 3100, propertyType: "House", images: ["https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600"], createdAt: "2025-01-30", isFeatured: false },
-    { id: "l3", listingType: "lease", price: 3950, location: "2020 Union St, San Francisco, CA", bedrooms: 2, bathrooms: 2, area: 1400, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600"], createdAt: "2025-02-03", isFeatured: false },
-    { id: "l4", listingType: "lease", price: 8900, location: "1 Rodeo Dr, Beverly Hills, CA", bedrooms: 5, bathrooms: 4, area: 4500, propertyType: "House", images: ["https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600"], createdAt: "2025-02-08", isFeatured: false },
-    { id: "l5", listingType: "lease", price: 2750, location: "800 Olive Way, Seattle, WA", bedrooms: 2, bathrooms: 1.5, area: 980, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600"], createdAt: "2025-02-13", isFeatured: false },
-    { id: "l6", listingType: "lease", price: 5200, location: "1501 Walnut St, Philadelphia, PA", bedrooms: 3, bathrooms: 2.5, area: 2100, propertyType: "Condo", images: ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600"], createdAt: "2025-02-14", isFeatured: false }
-  ];
+  // DOM elements
+  const featuredGrid = document.getElementById('featuredGrid');
+  const latestGrid = document.getElementById('latestGrid');
+  const searchLocationInput = document.getElementById('searchLocation');
+  const searchBtn = document.getElementById('searchBtn');
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  let currentListingType = 'buy';   // 'buy', 'rent', 'lease'
 
-  let currentListingType = 'buy';
-
+  // Helper: format price
   function formatPrice(price) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price);
   }
 
+  // Helper: get human readable listing type
   function getListingLabel(type) {
     if (type === 'buy') return 'For Sale';
     if (type === 'rent') return 'For Rent';
     return 'For Lease';
   }
 
-  function renderPropertyCards(properties, containerId) {
-    const container = document.getElementById(containerId);
-    if (!properties.length) {
+  // Render property cards into a container
+  function renderPropertyCards(properties, container) {
+    if (!properties || properties.length === 0) {
       container.innerHTML = '<div style="text-align:center; grid-column:1/-1;">No properties found.</div>';
       return;
     }
     let html = '';
     properties.forEach(prop => {
-      const imageUrl = prop.images?.[0] || 'https://via.placeholder.com/600x400?text=Dominion+Home';
+      const imageUrl = prop.images && prop.images.length > 0 ? prop.images[0] : 'https://via.placeholder.com/600x400?text=Dominion+Home';
       const listingLabel = getListingLabel(prop.listingType);
       const typeClass = prop.listingType === 'rent' ? 'rent' : (prop.listingType === 'lease' ? 'lease' : '');
       html += `
@@ -588,15 +605,15 @@
             <div class="features">
               <span><i class="fas fa-bed"></i> ${prop.bedrooms} beds</span>
               <span><i class="fas fa-bath"></i> ${prop.bathrooms} baths</span>
-              <span><i class="fas fa-ruler-combined"></i> ${prop.area} sqft</span>
+              <span><i class="fas fa-ruler-combined"></i> ${prop.area || 0} sqft</span>
             </div>
-            <span class="badge">${prop.propertyType}</span>
+            <span class="badge">${prop.propertyType || 'Property'}</span>
           </div>
         </div>
       `;
     });
     container.innerHTML = html;
-    // Add click handlers
+    // Attach click event to each card
     container.querySelectorAll('.property-card').forEach(card => {
       card.addEventListener('click', () => {
         const id = card.getAttribute('data-id');
@@ -605,59 +622,85 @@
     });
   }
 
+  // Load properties from Realtime Database
   async function loadProperties() {
-    let properties = [];
+    console.log(`Loading properties for type: ${currentListingType}`);
+    // Reference to 'properties' node
+    const propertiesRef = ref(db, 'properties');
+    // Build query: order by 'listingType' and equal to currentListingType
+    const propertiesQuery = query(propertiesRef, orderByChild('listingType'), equalTo(currentListingType));
+    
     try {
-      const q = query(collection(db, 'properties'), where('listingType', '==', currentListingType));
-      const snapshot = await getDocs(q);
-      if (!snapshot.empty) {
-        properties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const snapshot = await get(propertiesQuery);
+      if (snapshot.exists()) {
+        const allProperties = [];
+        snapshot.forEach(childSnapshot => {
+          allProperties.push({ id: childSnapshot.key, ...childSnapshot.val() });
+        });
+        
+        // Featured: where isFeatured === true
+        const featured = allProperties.filter(p => p.isFeatured === true).slice(0, 6);
+        // Latest: sort by createdAt (newest first) – assuming createdAt is a string like "2025-06-10T10:00:00Z"
+        const latest = [...allProperties]
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 6);
+        
+        renderPropertyCards(featured, featuredGrid);
+        renderPropertyCards(latest, latestGrid);
       } else {
-        properties = allSampleProperties.filter(p => p.listingType === currentListingType);
+        featuredGrid.innerHTML = '<div style="text-align:center; grid-column:1/-1;">No properties found. Add some in the Firebase Realtime Database!</div>';
+        latestGrid.innerHTML = '';
       }
-    } catch (err) {
-      properties = allSampleProperties.filter(p => p.listingType === currentListingType);
+    } catch (error) {
+      console.error("Error loading properties:", error);
+      featuredGrid.innerHTML = '<div style="text-align:center; grid-column:1/-1;">Error loading properties. Check console.</div>';
+      latestGrid.innerHTML = '';
     }
-    // Featured: isFeatured true (limit 6)
-    const featured = properties.filter(p => p.isFeatured).slice(0, 6);
-    // Latest: all properties sorted by createdAt desc, excluding those already in featured if needed, but show 6 latest
-    const latest = [...properties].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 6);
-    renderPropertyCards(featured, 'featuredGrid');
-    renderPropertyCards(latest, 'latestGrid');
   }
 
-  // Tab switching on homepage (changes which listing type is shown)
-  const tabBtns = document.querySelectorAll('.tab-btn');
+  // Tab switching
+  function setActiveTab(type) {
+    currentListingType = type;
+    tabBtns.forEach(btn => {
+      if (btn.getAttribute('data-type') === type) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    loadProperties();
+  }
+
   tabBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
       const type = e.currentTarget.getAttribute('data-type');
-      currentListingType = type;
-      tabBtns.forEach(btn => btn.classList.remove('active'));
-      e.currentTarget.classList.add('active');
-      loadProperties();
+      setActiveTab(type);
     });
   });
 
   // Search button
-  document.getElementById('searchBtn').addEventListener('click', () => {
-    const location = document.getElementById('searchLocation').value.trim();
+  searchBtn.addEventListener('click', () => {
+    const location = searchLocationInput.value.trim();
     if (location) {
       window.location.href = `listings.html?location=${encodeURIComponent(location)}&type=${currentListingType}`;
     } else {
-      alert("Please enter a location");
+      alert("Please enter a location (city, zip code, or neighborhood).");
     }
   });
 
+  // View All Listings button
   document.getElementById('viewAllListingsBtn').addEventListener('click', () => {
     window.location.href = `listings.html?type=${currentListingType}`;
   });
 
+  // Auth and other buttons
   document.getElementById('loginNavBtn')?.addEventListener('click', () => window.location.href = 'login.html');
   document.getElementById('signupNavBtn')?.addEventListener('click', () => window.location.href = 'login.html?signup=true');
   document.getElementById('listPropCard')?.querySelector('button')?.addEventListener('click', () => window.location.href = 'login.html?redirect=dashboard');
   document.getElementById('findAgentCard')?.querySelector('button')?.addEventListener('click', () => alert("Agent partnership portal coming soon."));
   document.getElementById('mortgageCard')?.querySelector('button')?.addEventListener('click', () => alert("Mortgage calculator will be available on property detail pages."));
 
+  // Initial load
   loadProperties();
 </script>
 </body>
