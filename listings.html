@@ -4,29 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Property Listings – Dominion Home Hub</title>
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
-  <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- Leaflet CSS (for map) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #f9fafb;
-      color: #1f2937;
-    }
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-    /* Navigation (same as homepage) */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f2937; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 24px; }
     .navbar {
       background: white;
       box-shadow: 0 2px 12px rgba(0,0,0,0.05);
@@ -76,13 +60,11 @@
       font-weight: 600;
       cursor: pointer;
     }
-    /* Layout */
     .listings-layout {
       display: flex;
       gap: 2rem;
       margin: 2rem 0;
     }
-    /* Sidebar filters */
     .filters-sidebar {
       width: 280px;
       flex-shrink: 0;
@@ -94,28 +76,15 @@
       position: sticky;
       top: 90px;
     }
-    .filter-group {
-      margin-bottom: 1.5rem;
-    }
-    .filter-group label {
-      font-weight: 600;
-      display: block;
-      margin-bottom: 0.5rem;
-    }
+    .filter-group { margin-bottom: 1.5rem; }
+    .filter-group label { font-weight: 600; display: block; margin-bottom: 0.5rem; }
     .filter-group input, .filter-group select {
       width: 100%;
       padding: 0.6rem;
       border: 1px solid #e2e8f0;
       border-radius: 0.5rem;
     }
-    .price-range {
-      display: flex;
-      gap: 0.5rem;
-    }
-    .price-range input {
-      width: 50%;
-    }
-    /* Map */
+    .price-range { display: flex; gap: 0.5rem; }
     .map-container {
       height: 300px;
       border-radius: 1rem;
@@ -123,7 +92,6 @@
       margin-bottom: 1.5rem;
       border: 1px solid #e2e8f0;
     }
-    /* Results toolbar */
     .results-toolbar {
       display: flex;
       justify-content: space-between;
@@ -143,7 +111,6 @@
       background: #1e3a8a;
       color: white;
     }
-    /* Property grid */
     .property-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -156,6 +123,7 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
       transition: transform 0.2s;
       cursor: pointer;
+      position: relative;
     }
     .property-card:hover {
       transform: translateY(-4px);
@@ -166,39 +134,29 @@
       background-size: cover;
       background-position: center;
     }
-    .card-content {
-      padding: 1rem;
+    .listing-type-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #1e3a8a;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      z-index: 2;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .price {
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: #1e3a8a;
-    }
-    .address {
-      color: #6b7280;
-      font-size: 0.85rem;
-      margin: 0.3rem 0;
-    }
-    .features {
-      display: flex;
-      gap: 1rem;
-      font-size: 0.8rem;
-      margin: 0.5rem 0;
-    }
-    /* List view */
-    .list-view .property-card {
-      display: flex;
-      flex-direction: row;
-      height: 180px;
-    }
-    .list-view .card-img {
-      width: 240px;
-      height: 100%;
-    }
-    .list-view .card-content {
-      flex: 1;
-    }
-    /* Pagination */
+    .listing-type-badge.rent { background: #d97706; }
+    .listing-type-badge.lease { background: #10b981; }
+    .card-content { padding: 1rem; }
+    .price { font-size: 1.4rem; font-weight: 800; color: #1e3a8a; }
+    .address { color: #6b7280; font-size: 0.85rem; margin: 0.3rem 0; display: flex; align-items: center; gap: 0.3rem; }
+    .features { display: flex; gap: 1rem; font-size: 0.8rem; margin: 0.5rem 0; }
+    .badge { display: inline-block; background: #eef2ff; padding: 0.2rem 0.6rem; border-radius: 30px; font-size: 0.7rem; font-weight: 600; color: #1e3a8a; }
+    .list-view .property-card { display: flex; flex-direction: row; height: 180px; }
+    .list-view .card-img { width: 240px; height: 100%; }
+    .list-view .card-content { flex: 1; }
     .pagination {
       display: flex;
       justify-content: center;
@@ -224,13 +182,8 @@
       text-align: center;
     }
     @media (max-width: 900px) {
-      .listings-layout {
-        flex-direction: column;
-      }
-      .filters-sidebar {
-        width: 100%;
-        position: static;
-      }
+      .listings-layout { flex-direction: column; }
+      .filters-sidebar { width: 100%; position: static; }
     }
   </style>
 </head>
@@ -251,7 +204,6 @@
 
 <div class="container">
   <div class="listings-layout">
-    <!-- Sidebar Filters -->
     <aside class="filters-sidebar">
       <h3>Filters</h3>
       <div class="filter-group">
@@ -283,18 +235,14 @@
         <label>Property Type</label>
         <select id="propertyType">
           <option value="">All</option>
-          <option>House</option><option>Apartment</option><option>Condo</option><option>Land</option>
+          <option>House</option><option>Apartment</option><option>Condo</option><option>Townhouse</option><option>Land</option>
         </select>
       </div>
       <button id="applyFiltersBtn" class="btn-primary" style="width:100%">Apply Filters</button>
     </aside>
 
-    <!-- Main Content -->
     <main style="flex:1">
-      <!-- Map -->
       <div id="map" class="map-container"></div>
-
-      <!-- Toolbar -->
       <div class="results-toolbar">
         <div><strong><span id="resultCount">0</span> properties found</strong></div>
         <div>
@@ -309,11 +257,7 @@
           <button id="listViewBtn"><i class="fas fa-list"></i> List</button>
         </div>
       </div>
-
-      <!-- Property Results -->
       <div id="propertyResults" class="property-grid"></div>
-
-      <!-- Pagination -->
       <div id="paginationControls" class="pagination"></div>
     </main>
   </div>
@@ -325,12 +269,9 @@
   </div>
 </footer>
 
-<!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module">
-  // ------------------------------
-  // FIREBASE CONFIG (replace with yours)
-  // ------------------------------
+  // Firebase config (replace with your own)
   const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_AUTH_DOMAIN",
@@ -341,35 +282,50 @@
   };
 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, orderBy, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
   import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  // ------------------------------
-  // SAMPLE DATA (fallback if Firebase fails or not configured)
-  // ------------------------------
+  // ---------- EXPANDED SAMPLE DATA (20 properties across buy/rent/lease) ----------
   const sampleProperties = [
-    { id: "s1", listingType: "buy", price: 875000, location: "1234 Hillside Ave, Austin, TX", bedrooms: 4, bathrooms: 3.5, area: 2850, propertyType: "House", images: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400"], lat: 30.2672, lng: -97.7431, createdAt: "2025-01-10" },
-    { id: "s2", listingType: "buy", price: 1250000, location: "56 Highland Park, Dallas, TX", bedrooms: 5, bathrooms: 4, area: 3650, propertyType: "House", images: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400"], lat: 32.7767, lng: -96.7970, createdAt: "2025-01-15" },
-    { id: "s3", listingType: "rent", price: 3200, location: "2400 Nueces St, Austin, TX", bedrooms: 2, bathrooms: 2, area: 1250, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400"], lat: 30.2850, lng: -97.7400, createdAt: "2025-01-20" },
-    { id: "s4", listingType: "lease", price: 4800, location: "555 Corporate Dr, Houston, TX", bedrooms: 3, bathrooms: 3, area: 2600, propertyType: "Condo", images: ["https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=400"], lat: 29.7604, lng: -95.3698, createdAt: "2025-02-01" }
+    // BUY (For Sale) - 8 properties
+    { id: "b1", listingType: "buy", price: 875000, location: "1234 Hillside Ave, Austin, TX 78701", bedrooms: 4, bathrooms: 3.5, area: 2850, propertyType: "House", images: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600"], lat: 30.2672, lng: -97.7431, createdAt: "2025-01-10" },
+    { id: "b2", listingType: "buy", price: 1250000, location: "56 Highland Park, Dallas, TX 75205", bedrooms: 5, bathrooms: 4, area: 3650, propertyType: "House", images: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600"], lat: 32.7767, lng: -96.7970, createdAt: "2025-01-15" },
+    { id: "b3", listingType: "buy", price: 450000, location: "789 Oak St, Houston, TX 77002", bedrooms: 3, bathrooms: 2, area: 1950, propertyType: "Townhouse", images: ["https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600"], lat: 29.7604, lng: -95.3698, createdAt: "2025-01-20" },
+    { id: "b4", listingType: "buy", price: 1899000, location: "12 Royal Palm, Miami, FL 33139", bedrooms: 6, bathrooms: 5.5, area: 5200, propertyType: "House", images: ["https://images.unsplash.com/photo-1613977257365-aaae5a9817ff?w=600"], lat: 25.7617, lng: -80.1918, createdAt: "2025-02-01" },
+    { id: "b5", listingType: "buy", price: 675000, location: "2020 Cherry Creek, Denver, CO 80206", bedrooms: 3, bathrooms: 2.5, area: 2200, propertyType: "Condo", images: ["https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600"], lat: 39.7392, lng: -104.9903, createdAt: "2025-02-05" },
+    { id: "b6", listingType: "buy", price: 350000, location: "1500 Main St, Kansas City, MO 64105", bedrooms: 2, bathrooms: 2, area: 1400, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600"], lat: 39.0997, lng: -94.5786, createdAt: "2025-02-10" },
+    { id: "b7", listingType: "buy", price: 2200000, location: "1 Ocean Drive, Malibu, CA 90265", bedrooms: 5, bathrooms: 5, area: 4800, propertyType: "House", images: ["https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=600"], lat: 34.0259, lng: -118.7798, createdAt: "2025-02-12" },
+    { id: "b8", listingType: "buy", price: 549000, location: "3300 Peachtree Rd, Atlanta, GA 30305", bedrooms: 3, bathrooms: 2, area: 1800, propertyType: "Condo", images: ["https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600"], lat: 33.7490, lng: -84.3880, createdAt: "2025-02-15" },
+    // RENT - 6 properties
+    { id: "r1", listingType: "rent", price: 3200, location: "2400 Nueces St, Austin, TX 78705", bedrooms: 2, bathrooms: 2, area: 1250, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600"], lat: 30.2850, lng: -97.7400, createdAt: "2025-01-18" },
+    { id: "r2", listingType: "rent", price: 1850, location: "4500 Medical Pkwy, Dallas, TX 75204", bedrooms: 1, bathrooms: 1, area: 780, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600"], lat: 32.7830, lng: -96.8067, createdAt: "2025-01-22" },
+    { id: "r3", listingType: "rent", price: 5600, location: "1010 Post Oak Blvd, Houston, TX 77056", bedrooms: 3, bathrooms: 2.5, area: 2100, propertyType: "Condo", images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600"], lat: 29.7361, lng: -95.4616, createdAt: "2025-01-28" },
+    { id: "r4", listingType: "rent", price: 4200, location: "77 Seaport Blvd, Boston, MA 02210", bedrooms: 2, bathrooms: 2, area: 1450, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600"], lat: 42.3601, lng: -71.0589, createdAt: "2025-02-02" },
+    { id: "r5", listingType: "rent", price: 2300, location: "500 W Madison, Chicago, IL 60661", bedrooms: 1, bathrooms: 1, area: 850, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1494526585095-c41746248156?w=600"], lat: 41.8819, lng: -87.6430, createdAt: "2025-02-07" },
+    { id: "r6", listingType: "rent", price: 3950, location: "1200 Alameda, Seattle, WA 98101", bedrooms: 2, bathrooms: 2, area: 1100, propertyType: "Condo", images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600"], lat: 47.6062, lng: -122.3321, createdAt: "2025-02-11" },
+    // LEASE - 6 properties
+    { id: "l1", listingType: "lease", price: 4800, location: "555 Corporate Dr, Houston, TX 77079", bedrooms: 3, bathrooms: 3, area: 2600, propertyType: "Townhouse", images: ["https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=600"], lat: 29.7590, lng: -95.5500, createdAt: "2025-01-25" },
+    { id: "l2", listingType: "lease", price: 6200, location: "1001 Lakeside, Seattle, WA 98101", bedrooms: 4, bathrooms: 3.5, area: 3100, propertyType: "House", images: ["https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600"], lat: 47.6089, lng: -122.3365, createdAt: "2025-01-30" },
+    { id: "l3", listingType: "lease", price: 3950, location: "2020 Union St, San Francisco, CA 94123", bedrooms: 2, bathrooms: 2, area: 1400, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600"], lat: 37.7749, lng: -122.4194, createdAt: "2025-02-03" },
+    { id: "l4", listingType: "lease", price: 8900, location: "1 Rodeo Dr, Beverly Hills, CA 90210", bedrooms: 5, bathrooms: 4, area: 4500, propertyType: "House", images: ["https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600"], lat: 34.0900, lng: -118.4090, createdAt: "2025-02-08" },
+    { id: "l5", listingType: "lease", price: 2750, location: "800 Olive Way, Seattle, WA 98101", bedrooms: 2, bathrooms: 1.5, area: 980, propertyType: "Apartment", images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600"], lat: 47.6131, lng: -122.3338, createdAt: "2025-02-13" },
+    { id: "l6", listingType: "lease", price: 5200, location: "1501 Walnut St, Philadelphia, PA 19102", bedrooms: 3, bathrooms: 2.5, area: 2100, propertyType: "Condo", images: ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600"], lat: 39.9526, lng: -75.1652, createdAt: "2025-02-14" }
   ];
 
-  // Global state
   let allProperties = [];
   let filteredProperties = [];
   let currentPage = 1;
-  const pageSize = 9;
+  const pageSize = 12; // Show 12 per page (still 15+ total)
   let currentView = 'grid';
   let map = null;
   let markersLayer = null;
-  let currentListingType = 'buy';   // from URL param
+  let currentListingType = 'buy';
   let searchLocation = '';
 
-  // DOM elements
   const resultsContainer = document.getElementById('propertyResults');
   const resultCountSpan = document.getElementById('resultCount');
   const applyFiltersBtn = document.getElementById('applyFiltersBtn');
@@ -378,7 +334,6 @@
   const listViewBtn = document.getElementById('listViewBtn');
   const paginationDiv = document.getElementById('paginationControls');
 
-  // Helper: get URL params
   function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
     currentListingType = params.get('type') || 'buy';
@@ -386,7 +341,6 @@
     document.getElementById('filterLocation').value = searchLocation;
   }
 
-  // Load properties (Firebase or sample)
   async function loadProperties() {
     try {
       const q = query(collection(db, 'properties'), where('listingType', '==', currentListingType));
@@ -403,27 +357,18 @@
     applyFiltersAndRender();
   }
 
-  // Filtering logic
   function applyFilters() {
     let results = [...allProperties];
     const locationFilter = document.getElementById('filterLocation').value.trim().toLowerCase();
-    if (locationFilter) {
-      results = results.filter(p => p.location.toLowerCase().includes(locationFilter));
-    }
+    if (locationFilter) results = results.filter(p => p.location.toLowerCase().includes(locationFilter));
     const minPrice = parseFloat(document.getElementById('minPrice').value);
     const maxPrice = parseFloat(document.getElementById('maxPrice').value);
     if (!isNaN(minPrice)) results = results.filter(p => p.price >= minPrice);
     if (!isNaN(maxPrice)) results = results.filter(p => p.price <= maxPrice);
     const bedrooms = document.getElementById('bedrooms').value;
-    if (bedrooms) {
-      const bedVal = parseInt(bedrooms);
-      results = results.filter(p => p.bedrooms >= bedVal);
-    }
+    if (bedrooms) results = results.filter(p => p.bedrooms >= parseInt(bedrooms));
     const bathrooms = document.getElementById('bathrooms').value;
-    if (bathrooms) {
-      const bathVal = parseFloat(bathrooms);
-      results = results.filter(p => p.bathrooms >= bathVal);
-    }
+    if (bathrooms) results = results.filter(p => p.bathrooms >= parseFloat(bathrooms));
     const propType = document.getElementById('propertyType').value;
     if (propType) results = results.filter(p => p.propertyType === propType);
     return results;
@@ -436,6 +381,18 @@
     else if (sortValue === 'price_desc') sorted.sort((a,b) => b.price - a.price);
     else if (sortValue === 'newest') sorted.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
     return sorted;
+  }
+
+  function getListingTypeLabel(type) {
+    if (type === 'buy') return 'For Sale';
+    if (type === 'rent') return 'For Rent';
+    return 'For Lease';
+  }
+
+  function getListingTypeClass(type) {
+    if (type === 'rent') return 'rent';
+    if (type === 'lease') return 'lease';
+    return '';
   }
 
   function renderPagination(totalItems) {
@@ -464,22 +421,27 @@
     } else {
       resultsContainer.className = 'property-grid list-view';
     }
-    resultsContainer.innerHTML = paginated.map(prop => `
-      <div class="property-card" data-id="${prop.id}">
-        <div class="card-img" style="background-image: url('${prop.images?.[0] || 'https://via.placeholder.com/400'}');"></div>
-        <div class="card-content">
-          <div class="price">$${prop.price.toLocaleString()}</div>
-          <div class="address"><i class="fas fa-map-marker-alt"></i> ${prop.location}</div>
-          <div class="features">
-            <span><i class="fas fa-bed"></i> ${prop.bedrooms} beds</span>
-            <span><i class="fas fa-bath"></i> ${prop.bathrooms} baths</span>
-            <span><i class="fas fa-ruler-combined"></i> ${prop.area || 0} sqft</span>
+    resultsContainer.innerHTML = paginated.map(prop => {
+      const listingLabel = getListingTypeLabel(prop.listingType);
+      const typeClass = getListingTypeClass(prop.listingType);
+      const imageUrl = prop.images?.[0] || 'https://via.placeholder.com/600x400?text=Dominion+Home';
+      return `
+        <div class="property-card" data-id="${prop.id}">
+          <div class="listing-type-badge ${typeClass}">${listingLabel}</div>
+          <div class="card-img" style="background-image: url('${imageUrl}');"></div>
+          <div class="card-content">
+            <div class="price">$${prop.price.toLocaleString()}</div>
+            <div class="address"><i class="fas fa-map-marker-alt"></i> ${prop.location}</div>
+            <div class="features">
+              <span><i class="fas fa-bed"></i> ${prop.bedrooms} beds</span>
+              <span><i class="fas fa-bath"></i> ${prop.bathrooms} baths</span>
+              <span><i class="fas fa-ruler-combined"></i> ${prop.area || 0} sqft</span>
+            </div>
+            <span class="badge">${prop.propertyType || 'Property'}</span>
           </div>
-          <span class="badge">${prop.propertyType || 'Property'}</span>
         </div>
-      </div>
-    `).join('');
-    // Attach click events to cards
+      `;
+    }).join('');
     document.querySelectorAll('.property-card').forEach(card => {
       card.addEventListener('click', () => {
         const id = card.getAttribute('data-id');
@@ -489,7 +451,6 @@
     renderPagination(filteredProperties.length);
   }
 
-  // Leaflet Map
   function initMap() {
     map = L.map('map').setView([39.8283, -98.5795], 4);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -509,7 +470,8 @@
         marker.bindPopup(`
           <b>$${prop.price.toLocaleString()}</b><br>
           ${prop.location}<br>
-          ${prop.bedrooms} beds, ${prop.bathrooms} baths
+          ${prop.bedrooms} beds, ${prop.bathrooms} baths<br>
+          <strong>${getListingTypeLabel(prop.listingType)}</strong>
         `);
       }
     });
@@ -525,7 +487,6 @@
     updateMapMarkers();
   }
 
-  // Event listeners
   applyFiltersBtn.addEventListener('click', applyFiltersAndRender);
   sortSelect.addEventListener('change', () => {
     renderResults();
@@ -544,16 +505,12 @@
     renderResults();
   });
 
-  // Navigation buttons
   document.getElementById('loginNavBtn')?.addEventListener('click', () => window.location.href = 'login.html');
   document.getElementById('signupNavBtn')?.addEventListener('click', () => window.location.href = 'login.html?signup=true');
 
-  // Initialization
   getUrlParams();
   initMap();
-  loadProperties().then(() => {
-    applyFiltersAndRender();
-  });
+  loadProperties();
 </script>
 </body>
-</html>x
+</html>
