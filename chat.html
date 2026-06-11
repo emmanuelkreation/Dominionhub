@@ -16,7 +16,6 @@
       display: flex;
       flex-direction: column;
     }
-    /* Navbar */
     .navbar {
       background: white;
       box-shadow: 0 2px 12px rgba(0,0,0,0.05);
@@ -48,7 +47,6 @@
       font-weight: 600;
       cursor: pointer;
     }
-    /* Chat Layout */
     .chat-container {
       flex: 1;
       display: flex;
@@ -61,7 +59,6 @@
       overflow: hidden;
       height: calc(100vh - 100px);
     }
-    /* Property Summary */
     .property-summary {
       display: flex;
       gap: 1rem;
@@ -79,7 +76,6 @@
     }
     .prop-details h3 { font-size: 1rem; margin-bottom: 0.2rem; }
     .prop-details p { font-size: 0.8rem; color: #6b7280; }
-    /* Messages Area */
     .messages-area {
       flex: 1;
       overflow-y: auto;
@@ -116,7 +112,6 @@
       color: #9ca3af;
       margin: 0.2rem 0.5rem;
     }
-    /* Input Area */
     .input-area {
       display: flex;
       gap: 0.5rem;
@@ -182,9 +177,9 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getDatabase, ref, push, set, get, child, update, onChildAdded, serverTimestamp, query, orderByChild } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getDatabase, ref, push, set, get, child, update, onChildAdded, query, orderByChild } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
-   const firebaseConfig = {
+  const firebaseConfig = {
     apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
     authDomain: "dominion-1e85f.firebaseapp.com",
     databaseURL: "https://dominion-1e85f-default-rtdb.firebaseio.com",
@@ -199,7 +194,6 @@
   const auth = getAuth(app);
   const db = getDatabase(app);
 
-  // Get URL parameters
   const urlParams = new URLSearchParams(window.location.search);
   const propertyId = urlParams.get('propertyId');
   const sellerId = urlParams.get('sellerId');
@@ -208,20 +202,17 @@
   let chatId = null;
   let propertyData = null;
 
-  // DOM elements
   const propertySummaryDiv = document.getElementById('propertySummary');
   const messagesArea = document.getElementById('messagesArea');
   const messageInput = document.getElementById('messageInput');
   const sendBtn = document.getElementById('sendBtn');
 
-  // Helper: format timestamp
   function formatTime(timestamp) {
     if (!timestamp) return '';
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
-  // Load property details from Realtime Database
   async function loadProperty() {
     if (!propertyId) {
       propertySummaryDiv.innerHTML = '<div class="prop-details"><h3>Invalid property</h3></div>';
@@ -230,7 +221,7 @@
     const snapshot = await get(child(ref(db), `properties/${propertyId}`));
     if (snapshot.exists()) {
       propertyData = snapshot.val();
-      const imageUrl = propertyData.images && propertyData.images.length ? propertyData.images[0] : 'https://via.placeholder.com/60';
+      const imageUrl = propertyData.images?.length ? propertyData.images[0] : 'https://via.placeholder.com/60';
       document.querySelector('.prop-img').style.backgroundImage = `url('${imageUrl}')`;
       document.querySelector('.prop-details h3').textContent = `${propertyData.propertyType} at ${propertyData.location.split(',')[0]}`;
       document.querySelector('.prop-details p').textContent = `$${propertyData.price.toLocaleString()} - ${propertyData.listingType === 'buy' ? 'For Sale' : (propertyData.listingType === 'rent' ? 'For Rent' : 'For Lease')}`;
@@ -239,10 +230,8 @@
     }
   }
 
-  // Find or create chat room
   async function getOrCreateChat() {
-    if (!currentUser || !propertyId || !sellerId) return;
-    // Check if chat already exists for this property and these two users
+    if (!currentUser || !propertyId || !sellerId) return null;
     const chatsRef = ref(db, 'chats');
     const snapshot = await get(chatsRef);
     let existingChatId = null;
@@ -258,22 +247,21 @@
     }
     if (existingChatId) {
       chatId = existingChatId;
-      // Mark messages as read for current user
+      const isSeller = (currentUser.uid === sellerId);
       await update(ref(db, `chats/${chatId}`), {
-        [`${currentUser.uid === sellerId ? 'sellerHasUnread' : 'buyerHasUnread'}`]: false
+        [isSeller ? 'sellerHasUnread' : 'buyerHasUnread']: false
       });
     } else {
-      // Create new chat
       const newChatRef = push(ref(db, 'chats'));
       chatId = newChatRef.key;
-      const buyerId = currentUser.uid;
-      const isBuyer = (currentUser.uid !== sellerId);
+      const buyerId = (currentUser.uid !== sellerId) ? currentUser.uid : sellerId;
+      const sellerIdFinal = (currentUser.uid !== sellerId) ? sellerId : currentUser.uid;
       await set(newChatRef, {
         propertyId: propertyId,
-        buyerId: isBuyer ? currentUser.uid : sellerId,
-        sellerId: isBuyer ? sellerId : currentUser.uid,
+        buyerId: buyerId,
+        sellerId: sellerIdFinal,
         lastMessage: '',
-        lastUpdated: serverTimestamp(),
+        lastUpdated: Date.now(),
         buyerHasUnread: false,
         sellerHasUnread: false
       });
@@ -281,7 +269,6 @@
     return chatId;
   }
 
-  // Load messages in real time
   function listenToMessages() {
     if (!chatId) return;
     const messagesRef = ref(db, `messages/${chatId}`);
@@ -290,7 +277,6 @@
       const msg = snapshot.val();
       displayMessage(msg);
     });
-    // Also mark unread as false
     const isSeller = (currentUser.uid === sellerId);
     update(ref(db, `chats/${chatId}`), {
       [isSeller ? 'sellerHasUnread' : 'buyerHasUnread']: false
@@ -298,7 +284,6 @@
   }
 
   function displayMessage(msg) {
-    // Remove "Loading..." placeholder if exists
     if (messagesArea.children.length === 1 && messagesArea.children[0].innerText.includes('Loading')) {
       messagesArea.innerHTML = '';
     }
@@ -325,35 +310,43 @@
 
   async function sendMessage() {
     const text = messageInput.value.trim();
-    if (!text || !chatId) return;
-    const messageRef = push(ref(db, `messages/${chatId}`));
-    await set(messageRef, {
-      senderId: currentUser.uid,
-      text: text,
-      timestamp: Date.now()
-    });
-    // Update last message in chat
-    await update(ref(db, `chats/${chatId}`), {
-      lastMessage: text,
-      lastUpdated: Date.now(),
-      // Set unread for the other party
-      [currentUser.uid === sellerId ? 'buyerHasUnread' : 'sellerHasUnread']: true
-    });
-    messageInput.value = '';
-    messagesArea.scrollTop = messagesArea.scrollHeight;
+    if (!text || !chatId) {
+      console.warn("Cannot send: no chatId", chatId);
+      return;
+    }
+    try {
+      const messageRef = push(ref(db, `messages/${chatId}`));
+      await set(messageRef, {
+        senderId: currentUser.uid,
+        text: text,
+        timestamp: Date.now()
+      });
+      await update(ref(db, `chats/${chatId}`), {
+        lastMessage: text,
+        lastUpdated: Date.now(),
+        [currentUser.uid === sellerId ? 'buyerHasUnread' : 'sellerHasUnread']: true
+      });
+      messageInput.value = '';
+      messagesArea.scrollTop = messagesArea.scrollHeight;
+    } catch (err) {
+      console.error("Send message error:", err);
+      alert("Failed to send message. Check console.");
+    }
   }
 
-  // Auth check
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
-      // Redirect to login with return URL
       window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
       return;
     }
     currentUser = user;
     await loadProperty();
     await getOrCreateChat();
-    listenToMessages();
+    if (chatId) {
+      listenToMessages();
+    } else {
+      messagesArea.innerHTML = '<div style="text-align:center; padding:2rem;">Unable to create chat. Please try again.</div>';
+    }
   });
 
   sendBtn.addEventListener('click', sendMessage);
