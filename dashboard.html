@@ -9,7 +9,7 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f2937; }
-    .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 24px; }
     .navbar {
       background: white;
       box-shadow: 0 2px 12px rgba(0,0,0,0.05);
@@ -50,14 +50,21 @@
       font-weight: 600;
       cursor: pointer;
     }
-    .dashboard-title { margin: 2rem 0; text-align: center; }
-    .add-property-card, .properties-card {
+    .dashboard-title { margin: 2rem 0 1rem; text-align: center; }
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 1000px) { .dashboard-layout { grid-template-columns: 1fr; } }
+    .card {
       background: white;
       border-radius: 1rem;
       padding: 1.5rem;
-      margin-bottom: 2rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
+    .card h2 { margin-bottom: 1rem; font-size: 1.3rem; border-left: 4px solid #d97706; padding-left: 0.8rem; }
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -72,43 +79,67 @@
       border: 1px solid #e2e8f0;
       border-radius: 0.5rem;
     }
-    .image-url-input {
-      width: 100%;
-      padding: 0.6rem;
-      border: 1px solid #e2e8f0;
-      border-radius: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-    .url-list {
-      margin-top: 0.5rem;
-      font-size: 0.8rem;
-      color: #6b7280;
-    }
-    .image-preview {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin: 1rem 0;
-    }
-    .image-preview img {
-      width: 80px;
-      height: 80px;
-      object-fit: cover;
-      border-radius: 0.5rem;
-    }
-    .property-table { width: 100%; overflow-x: auto; }
+    .image-url-input { width: 100%; padding: 0.6rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; margin-bottom: 0.5rem; }
+    .image-preview { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 1rem 0; }
+    .image-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 0.5rem; }
+    .property-table { overflow-x: auto; margin-top: 1rem; }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
     th { background: #f1f5f9; }
-    .edit-btn, .delete-btn {
-      padding: 0.3rem 0.8rem;
-      border-radius: 30px;
-      border: none;
-      cursor: pointer;
-      margin: 0 0.2rem;
-    }
+    .edit-btn, .delete-btn { padding: 0.3rem 0.8rem; border-radius: 30px; border: none; cursor: pointer; margin: 0 0.2rem; }
     .edit-btn { background: #d97706; color: white; }
     .delete-btn { background: #dc2626; color: white; }
+    /* Chat styles */
+    .chat-list {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+    }
+    .chat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem;
+      border-bottom: 1px solid #e2e8f0;
+      cursor: pointer;
+    }
+    .chat-item:hover { background: #f1f5f9; }
+    .chat-item.active { background: #e0e7ff; }
+    .chat-info h4 { font-size: 0.9rem; margin-bottom: 0.2rem; }
+    .chat-info p { font-size: 0.75rem; color: #6b7280; }
+    .unread-badge { background: #dc2626; color: white; border-radius: 50%; padding: 0.2rem 0.5rem; font-size: 0.7rem; }
+    .chat-panel {
+      margin-top: 1rem;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 1rem;
+    }
+    .messages-area {
+      height: 250px;
+      overflow-y: auto;
+      background: #f9fafb;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .message {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 0.5rem;
+    }
+    .message.sent { align-items: flex-end; }
+    .message.received { align-items: flex-start; }
+    .message-bubble {
+      max-width: 70%;
+      padding: 0.5rem 0.8rem;
+      border-radius: 1rem;
+      background: white;
+      border: 1px solid #e2e8f0;
+    }
+    .message.sent .message-bubble { background: #1e3a8a; color: white; border: none; }
+    .message-time { font-size: 0.65rem; color: #9ca3af; margin-top: 0.2rem; }
+    .chat-input { display: flex; gap: 0.5rem; }
+    .chat-input input { flex: 1; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 2rem; }
     .success { background: #dcfce7; color: #16a34a; padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 1rem; display: none; }
     .error { background: #fee2e2; color: #dc2626; padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 1rem; display: none; }
     footer {
@@ -118,7 +149,6 @@
       padding: 1.5rem;
       margin-top: 2rem;
     }
-    @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -137,63 +167,69 @@
 <div class="container">
   <div class="dashboard-title">
     <h1>Seller Dashboard</h1>
-    <p>Manage your property listings</p>
+    <p>Manage your properties, profile, and messages</p>
   </div>
 
   <div id="successMsg" class="success"></div>
   <div id="errorMsg" class="error"></div>
 
-  <!-- Add/Edit Property Form -->
-  <div class="add-property-card">
-    <h2 id="formTitle">Add New Property</h2>
-    <input type="hidden" id="propertyId" value="">
-    <div class="form-row">
-      <div class="form-group">
-        <label>Listing Type</label>
-        <select id="listingType">
-          <option value="buy">For Sale</option>
-          <option value="rent">For Rent</option>
-          <option value="lease">For Lease</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Price ($)</label>
-        <input type="number" id="price" placeholder="e.g., 350000">
-      </div>
+  <!-- Seller Profile / Brand Name -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <h2>Your Brand / Display Name</h2>
+    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+      <input type="text" id="sellerDisplayName" placeholder="e.g., ABC Realty, John's Properties" style="flex:1; padding:0.6rem; border:1px solid #e2e8f0; border-radius:0.5rem;">
+      <button id="updateBrandBtn" class="btn-primary">Update Brand Name</button>
     </div>
-    <div class="form-group">
-      <label>Location</label>
-      <input type="text" id="location" placeholder="Full address">
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Bedrooms</label><input type="number" id="bedrooms" value="0"></div>
-      <div class="form-group"><label>Bathrooms</label><input type="number" step="0.5" id="bathrooms" value="0"></div>
-      <div class="form-group"><label>Area (sqft)</label><input type="number" id="area" value="0"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Property Type</label><select id="propertyType"><option>House</option><option>Apartment</option><option>Condo</option><option>Townhouse</option><option>Land</option></select></div>
-      <div class="form-group"><label>Status</label><select id="status"><option value="available">Available</option><option value="sold">Sold</option><option value="pending">Pending</option><option value="rented">Rented</option></select></div>
-      <div class="form-group"><label>Featured?</label><select id="isFeatured"><option value="false">No</option><option value="true">Yes</option></select></div>
-    </div>
-    <div class="form-group">
-      <label>Description</label>
-      <textarea id="description" rows="3" placeholder="Describe the property..."></textarea>
-    </div>
-    <div class="form-group">
-      <label>Image URLs (one per line or comma separated)</label>
-      <textarea id="imageUrls" rows="3" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg&#10;Or: url1, url2, url3"></textarea>
-      <div class="url-list">Enter image URLs (publicly accessible). First image will be the main display image.</div>
-      <div id="imagePreview" class="image-preview"></div>
-    </div>
-    <button id="savePropertyBtn" class="btn-primary">Save Property</button>
-    <button id="cancelEditBtn" class="btn-outline" style="margin-left: 1rem; display: none;">Cancel Edit</button>
+    <p class="url-list" style="font-size:0.75rem; color:#6b7280; margin-top:0.5rem;">This name will appear on your property listings.</p>
   </div>
 
-  <!-- Existing Properties List -->
-  <div class="properties-card">
-    <h2>Your Properties</h2>
-    <div id="propertiesList" class="property-table">
-      <p>Loading properties...</p>
+  <div class="dashboard-layout">
+    <!-- Left Column: Property Management -->
+    <div class="card">
+      <h2 id="formTitle">Add New Property</h2>
+      <input type="hidden" id="propertyId" value="">
+      <div class="form-row">
+        <div class="form-group"><label>Listing Type</label><select id="listingType"><option value="buy">For Sale</option><option value="rent">For Rent</option><option value="lease">For Lease</option></select></div>
+        <div class="form-group"><label>Price ($)</label><input type="number" id="price" placeholder="e.g., 350000"></div>
+      </div>
+      <div class="form-group"><label>Location</label><input type="text" id="location" placeholder="Full address"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Bedrooms</label><input type="number" id="bedrooms" value="0"></div>
+        <div class="form-group"><label>Bathrooms</label><input type="number" step="0.5" id="bathrooms" value="0"></div>
+        <div class="form-group"><label>Area (sqft)</label><input type="number" id="area" value="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Property Type</label><select id="propertyType"><option>House</option><option>Apartment</option><option>Condo</option><option>Townhouse</option><option>Land</option></select></div>
+        <div class="form-group"><label>Status</label><select id="status"><option value="available">Available</option><option value="sold">Sold</option><option value="pending">Pending</option><option value="rented">Rented</option></select></div>
+        <div class="form-group"><label>Featured?</label><select id="isFeatured"><option value="false">No</option><option value="true">Yes</option></select></div>
+      </div>
+      <div class="form-group"><label>Description</label><textarea id="description" rows="3" placeholder="Describe the property..."></textarea></div>
+      <div class="form-group">
+        <label>Image URLs (one per line)</label>
+        <textarea id="imageUrls" rows="3" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
+        <div id="imagePreview" class="image-preview"></div>
+      </div>
+      <button id="savePropertyBtn" class="btn-primary">Save Property</button>
+      <button id="cancelEditBtn" class="btn-outline" style="margin-left: 1rem; display: none;">Cancel Edit</button>
+
+      <h2 style="margin-top: 2rem;">Your Properties</h2>
+      <div id="propertiesList" class="property-table"><p>Loading properties...</p></div>
+    </div>
+
+    <!-- Right Column: Chat Inbox & Messaging -->
+    <div class="card">
+      <h2>Messages from Buyers</h2>
+      <div id="chatListContainer" class="chat-list">
+        <p>Loading conversations...</p>
+      </div>
+      <div id="chatPanel" class="chat-panel" style="display: none;">
+        <h3 id="chatWithName">Chat with <span></span></h3>
+        <div id="chatMessagesArea" class="messages-area"></div>
+        <div class="chat-input">
+          <input type="text" id="chatMessageInput" placeholder="Type your reply...">
+          <button id="sendChatBtn" class="btn-primary">Send</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -204,8 +240,8 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getDatabase, ref, set, push, get, remove, update, child, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getDatabase, ref, set, push, get, remove, update, child, query, orderByChild, equalTo, onChildAdded, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
@@ -224,7 +260,10 @@
 
   let currentUser = null;
   let editingPropertyId = null;
-  let currentImageUrls = []; // store URLs for preview
+  let currentImageUrls = [];
+  let currentChatId = null;
+  let currentBuyerId = null;
+  let currentBuyerName = null;
 
   // DOM elements
   const formTitle = document.getElementById('formTitle');
@@ -246,57 +285,65 @@
   const propertiesListDiv = document.getElementById('propertiesList');
   const successDiv = document.getElementById('successMsg');
   const errorDiv = document.getElementById('errorMsg');
+  const sellerDisplayNameInput = document.getElementById('sellerDisplayName');
+  const updateBrandBtn = document.getElementById('updateBrandBtn');
+  const chatListContainer = document.getElementById('chatListContainer');
+  const chatPanel = document.getElementById('chatPanel');
+  const chatWithNameSpan = document.querySelector('#chatWithName span');
+  const chatMessagesArea = document.getElementById('chatMessagesArea');
+  const chatMessageInput = document.getElementById('chatMessageInput');
+  const sendChatBtn = document.getElementById('sendChatBtn');
 
   function showSuccess(msg) { successDiv.textContent = msg; successDiv.style.display = 'block'; setTimeout(() => successDiv.style.display = 'none', 4000); }
   function showError(msg) { errorDiv.textContent = msg; errorDiv.style.display = 'block'; setTimeout(() => errorDiv.style.display = 'none', 5000); }
 
-  // Helper: convert textarea input to array of URLs
+  // Helper: get image URLs from textarea
   function getImageUrlsFromInput() {
     let raw = imageUrlsTextarea.value;
     if (!raw.trim()) return [];
-    // Split by newline or comma
     let urls = raw.split(/[,\n]+/).map(u => u.trim()).filter(u => u.startsWith('http'));
     return urls;
   }
 
-  // Update preview from current URL list
   function updateImagePreview(urls) {
     imagePreview.innerHTML = '';
     urls.forEach((url, index) => {
-      const imgDiv = document.createElement('div');
-      imgDiv.style.position = 'relative';
-      imgDiv.innerHTML = `<img src="${url}" width="80" style="border-radius:8px; margin-right:5px;" onerror="this.src='https://via.placeholder.com/80?text=Invalid'"><button type="button" class="remove-url" data-index="${index}" style="position:absolute; top:-8px; right:-8px; background:red; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer;">×</button>`;
-      imagePreview.appendChild(imgDiv);
+      const div = document.createElement('div');
+      div.style.position = 'relative';
+      div.innerHTML = `<img src="${url}" width="80" style="border-radius:8px;" onerror="this.src='https://via.placeholder.com/80?text=Invalid'"><button type="button" class="remove-url" data-index="${index}" style="position:absolute; top:-8px; right:-8px; background:red; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer;">×</button>`;
+      imagePreview.appendChild(div);
     });
-    // Attach remove handlers
     document.querySelectorAll('.remove-url').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const idx = parseInt(btn.getAttribute('data-index'));
         currentImageUrls.splice(idx, 1);
         updateImagePreview(currentImageUrls);
-        // Update textarea to reflect removal
         imageUrlsTextarea.value = currentImageUrls.join('\n');
       });
     });
   }
 
-  // Load seller's properties
+  imageUrlsTextarea.addEventListener('input', () => {
+    currentImageUrls = getImageUrlsFromInput();
+    updateImagePreview(currentImageUrls);
+  });
+
+  // Property CRUD
   async function loadSellerProperties() {
     if (!currentUser) return;
     try {
-      const propertiesRef = ref(db, 'properties');
-      const q = query(propertiesRef, orderByChild('sellerId'), equalTo(currentUser.uid));
+      const q = query(ref(db, 'properties'), orderByChild('sellerId'), equalTo(currentUser.uid));
       const snapshot = await get(q);
       if (snapshot.exists()) {
         const properties = [];
         snapshot.forEach(child => properties.push({ id: child.key, ...child.val() }));
         renderPropertiesTable(properties);
       } else {
-        propertiesListDiv.innerHTML = '<p>You haven\'t listed any properties yet. Add your first property above.</p>';
+        propertiesListDiv.innerHTML = '<p>No properties yet. Add your first property.</p>';
       }
     } catch (err) {
       console.error(err);
-      propertiesListDiv.innerHTML = '<p>Error loading properties. Make sure security rules have ".indexOn": "sellerId".</p>';
+      propertiesListDiv.innerHTML = '<p>Error loading properties.</p>';
     }
   }
 
@@ -308,27 +355,19 @@
     let html = `<table><thead><tr><th>Type</th><th>Price</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
     properties.forEach(prop => {
       const listingLabel = prop.listingType === 'buy' ? 'For Sale' : (prop.listingType === 'rent' ? 'For Rent' : 'For Lease');
-      html += `
-        <tr>
-          <td>${listingLabel}</td>
-          <td>${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(prop.price)}</td>
-          <td>${prop.location.substring(0, 30)}${prop.location.length > 30 ? '…' : ''}</td>
-          <td>${prop.status}</td>
-          <td><button class="edit-btn" data-id="${prop.id}">Edit</button><button class="delete-btn" data-id="${prop.id}">Delete</button></td>
-        </tr>
-      `;
+      html += `<tr><td>${listingLabel}</td><td>${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(prop.price)}</td><td>${prop.location.substring(0, 30)}${prop.location.length > 30 ? '…' : ''}</td><td>${prop.status}</td><td><button class="edit-btn" data-id="${prop.id}">Edit</button><button class="delete-btn" data-id="${prop.id}">Delete</button></td></tr>`;
     });
-    html += `</tbody></tr>`;
+    html += `</tbody></table>`;
     propertiesListDiv.innerHTML = html;
 
     document.querySelectorAll('.edit-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
+      btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
         await loadPropertyForEdit(id);
       });
     });
     document.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
+      btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
         if (confirm('Delete this property permanently?')) await deleteProperty(id);
       });
@@ -359,32 +398,22 @@
         cancelEditBtn.style.display = 'inline-block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
-    } catch (err) {
-      showError('Failed to load property for edit');
-    }
+    } catch (err) { showError('Failed to load property'); }
   }
 
   async function deleteProperty(propertyId) {
     try {
       await remove(ref(db, `properties/${propertyId}`));
-      showSuccess('Property deleted successfully');
+      showSuccess('Property deleted');
       loadSellerProperties();
-    } catch (err) {
-      showError('Error deleting property');
-    }
+    } catch (err) { showError('Error deleting property'); }
   }
 
   async function saveProperty() {
-    if (!currentUser) {
-      showError('You must be logged in');
-      return;
-    }
-    if (!price.value || !location.value) {
-      showError('Please fill all required fields (Price and Location)');
-      return;
-    }
-
+    if (!currentUser) { showError('Not logged in'); return; }
+    if (!price.value || !location.value) { showError('Price and location required'); return; }
     const imageUrls = getImageUrlsFromInput();
+    const sellerName = sellerDisplayNameInput.value.trim() || currentUser.displayName || 'Property Owner';
     const propertyData = {
       listingType: listingType.value,
       price: parseFloat(price.value),
@@ -393,29 +422,26 @@
       bathrooms: parseFloat(bathrooms.value),
       area: parseFloat(area.value),
       propertyType: propertyType.value,
-      isFeatured: isFeatured.value === 'true',
       status: status.value,
+      isFeatured: isFeatured.value === 'true',
       description: description.value,
       sellerId: currentUser.uid,
+      sellerName: sellerName,
       createdAt: new Date().toISOString(),
       images: imageUrls
     };
-
     try {
       if (editingPropertyId) {
         await update(ref(db, `properties/${editingPropertyId}`), propertyData);
-        showSuccess('Property updated successfully');
+        showSuccess('Property updated');
       } else {
         const newRef = push(ref(db, 'properties'));
         await set(newRef, propertyData);
-        showSuccess('Property added successfully');
+        showSuccess('Property added');
       }
       resetForm();
       loadSellerProperties();
-    } catch (err) {
-      console.error('Save error:', err);
-      showError('Error saving property: ' + (err.message || 'Permission denied. Check security rules.'));
-    }
+    } catch (err) { showError('Error saving: ' + err.message); }
   }
 
   function resetForm() {
@@ -438,30 +464,173 @@
     cancelEditBtn.style.display = 'none';
   }
 
-  cancelEditBtn.addEventListener('click', resetForm);
+  // Load seller's brand name from database
+  async function loadSellerProfile() {
+    if (!currentUser) return;
+    const snapshot = await get(child(ref(db), `users/${currentUser.uid}`));
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      sellerDisplayNameInput.value = data.displayName || currentUser.displayName || '';
+    } else {
+      sellerDisplayNameInput.value = currentUser.displayName || '';
+    }
+  }
+
+  async function updateSellerBrandName() {
+    const newName = sellerDisplayNameInput.value.trim();
+    if (!newName) { showError('Please enter a brand/display name'); return; }
+    try {
+      await update(ref(db), { [`users/${currentUser.uid}/displayName`]: newName });
+      await updateProfile(auth.currentUser, { displayName: newName });
+      showSuccess('Brand name updated successfully');
+      // Also update all existing properties of this seller with new sellerName
+      const propsRef = ref(db, 'properties');
+      const q = query(propsRef, orderByChild('sellerId'), equalTo(currentUser.uid));
+      const snapshot = await get(q);
+      if (snapshot.exists()) {
+        snapshot.forEach(async (child) => {
+          await update(ref(db, `properties/${child.key}`), { sellerName: newName });
+        });
+      }
+    } catch (err) { showError('Error updating brand name'); }
+  }
+
+  // ---------- CHAT SYSTEM ----------
+  async function loadChats() {
+    if (!currentUser) return;
+    const chatsRef = ref(db, 'chats');
+    const q = query(chatsRef, orderByChild('sellerId'), equalTo(currentUser.uid));
+    const snapshot = await get(q);
+    if (!snapshot.exists()) {
+      chatListContainer.innerHTML = '<p style="padding:1rem;">No messages yet. Buyers will contact you from property pages.</p>';
+      return;
+    }
+    let chats = [];
+    snapshot.forEach(child => {
+      chats.push({ id: child.key, ...child.val() });
+    });
+    // Fetch buyer names and property info
+    let html = '';
+    for (const chat of chats) {
+      const buyerSnap = await get(child(ref(db), `users/${chat.buyerId}`));
+      const buyerName = buyerSnap.exists() ? (buyerSnap.val().displayName || 'Buyer') : 'Buyer';
+      const propSnap = await get(child(ref(db), `properties/${chat.propertyId}`));
+      const propTitle = propSnap.exists() ? propSnap.val().location.split(',')[0] : 'Property';
+      const unreadBadge = (chat.sellerHasUnread === true) ? '<span class="unread-badge">New</span>' : '';
+      html += `
+        <div class="chat-item" data-chatid="${chat.id}" data-buyerid="${chat.buyerId}" data-buyername="${buyerName}">
+          <div class="chat-info">
+            <h4>${buyerName}</h4>
+            <p>${propTitle} · ${chat.lastMessage ? chat.lastMessage.substring(0, 40) : 'No messages yet'}</p>
+          </div>
+          ${unreadBadge}
+        </div>
+      `;
+    }
+    chatListContainer.innerHTML = html;
+    // Attach click handlers
+    document.querySelectorAll('.chat-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const chatId = el.getAttribute('data-chatid');
+        const buyerId = el.getAttribute('data-buyerid');
+        const buyerName = el.getAttribute('data-buyername');
+        openChat(chatId, buyerId, buyerName);
+        // Mark as read
+        update(ref(db, `chats/${chatId}`), { sellerHasUnread: false });
+        el.querySelector('.unread-badge')?.remove();
+      });
+    });
+  }
+
+  let messageListener = null;
+  function openChat(chatId, buyerId, buyerName) {
+    currentChatId = chatId;
+    currentBuyerId = buyerId;
+    currentBuyerName = buyerName;
+    chatWithNameSpan.textContent = buyerName;
+    chatPanel.style.display = 'block';
+    // Load messages
+    const messagesRef = ref(db, `messages/${chatId}`);
+    if (messageListener) messageListener();
+    messageListener = onChildAdded(messagesRef, (snapshot) => {
+      const msg = snapshot.val();
+      displayChatMessage(msg);
+    });
+    // Also mark chat as read
+    update(ref(db, `chats/${chatId}`), { sellerHasUnread: false });
+  }
+
+  function displayChatMessage(msg) {
+    const isSent = (msg.senderId === currentUser.uid);
+    const div = document.createElement('div');
+    div.className = `message ${isSent ? 'sent' : 'received'}`;
+    const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    div.innerHTML = `<div class="message-bubble">${escapeHtml(msg.text)}</div><div class="message-time">${time}</div>`;
+    chatMessagesArea.appendChild(div);
+    chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+  }
+
+  async function sendChatMessage() {
+    const text = chatMessageInput.value.trim();
+    if (!text || !currentChatId) return;
+    const messageRef = push(ref(db, `messages/${currentChatId}`));
+    await set(messageRef, {
+      senderId: currentUser.uid,
+      text: text,
+      timestamp: Date.now()
+    });
+    await update(ref(db, `chats/${currentChatId}`), {
+      lastMessage: text,
+      lastUpdated: Date.now(),
+      buyerHasUnread: true  // buyer gets unread notification
+    });
+    chatMessageInput.value = '';
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  // Auto-refresh chats every 10 seconds
+  let refreshInterval;
+  function startChatRefresh() {
+    if (refreshInterval) clearInterval(refreshInterval);
+    refreshInterval = setInterval(() => {
+      loadChats();
+    }, 10000);
+  }
+
+  // Event listeners
   saveBtn.addEventListener('click', saveProperty);
+  cancelEditBtn.addEventListener('click', resetForm);
+  updateBrandBtn.addEventListener('click', updateSellerBrandName);
+  sendChatBtn.addEventListener('click', sendChatMessage);
+  chatMessageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
 
-  // Live preview when user types URLs
-  imageUrlsTextarea.addEventListener('input', () => {
-    currentImageUrls = getImageUrlsFromInput();
-    updateImagePreview(currentImageUrls);
-  });
-
-  // Authentication check
+  // Auth
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = 'login.html?redirect=dashboard.html';
       return;
     }
     currentUser = user;
-    const roleSnapshot = await get(child(ref(db), `users/${user.uid}/role`));
-    if (!roleSnapshot.exists() || roleSnapshot.val() !== 'seller') {
+    const roleSnap = await get(child(ref(db), `users/${user.uid}/role`));
+    if (!roleSnap.exists() || roleSnap.val() !== 'seller') {
       await signOut(auth);
-      alert('You are not authorized as a seller. Please log in with a seller account.');
+      alert('You are not a seller. Please log in with a seller account.');
       window.location.href = 'login.html';
       return;
     }
+    await loadSellerProfile();
     loadSellerProperties();
+    loadChats();
+    startChatRefresh();
   });
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
