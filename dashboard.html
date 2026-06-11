@@ -79,14 +79,19 @@
       border: 1px solid #e2e8f0;
       border-radius: 0.5rem;
     }
-    .image-url-input { width: 100%; padding: 0.6rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; margin-bottom: 0.5rem; }
     .image-preview { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 1rem 0; }
     .image-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 0.5rem; }
     .property-table { overflow-x: auto; margin-top: 1rem; }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
     th { background: #f1f5f9; }
-    .edit-btn, .delete-btn { padding: 0.3rem 0.8rem; border-radius: 30px; border: none; cursor: pointer; margin: 0 0.2rem; }
+    .edit-btn, .delete-btn {
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      border: none;
+      cursor: pointer;
+      margin: 0 0.2rem;
+    }
     .edit-btn { background: #d97706; color: white; }
     .delete-btn { background: #dc2626; color: white; }
     /* Chat styles */
@@ -180,7 +185,7 @@
       <input type="text" id="sellerDisplayName" placeholder="e.g., ABC Realty, John's Properties" style="flex:1; padding:0.6rem; border:1px solid #e2e8f0; border-radius:0.5rem;">
       <button id="updateBrandBtn" class="btn-primary">Update Brand Name</button>
     </div>
-    <p class="url-list" style="font-size:0.75rem; color:#6b7280; margin-top:0.5rem;">This name will appear on your property listings.</p>
+    <p style="font-size:0.75rem; color:#6b7280; margin-top:0.5rem;">This name will appear on your property listings.</p>
   </div>
 
   <div class="dashboard-layout">
@@ -241,7 +246,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getDatabase, ref, set, push, get, remove, update, child, query, orderByChild, equalTo, onChildAdded, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getDatabase, ref, set, push, get, remove, update, child, query, orderByChild, equalTo, onChildAdded } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
@@ -264,6 +269,8 @@
   let currentChatId = null;
   let currentBuyerId = null;
   let currentBuyerName = null;
+  let messageListener = null;
+  let refreshInterval = null;
 
   // DOM elements
   const formTitle = document.getElementById('formTitle');
@@ -297,7 +304,6 @@
   function showSuccess(msg) { successDiv.textContent = msg; successDiv.style.display = 'block'; setTimeout(() => successDiv.style.display = 'none', 4000); }
   function showError(msg) { errorDiv.textContent = msg; errorDiv.style.display = 'block'; setTimeout(() => errorDiv.style.display = 'none', 5000); }
 
-  // Helper: get image URLs from textarea
   function getImageUrlsFromInput() {
     let raw = imageUrlsTextarea.value;
     if (!raw.trim()) return [];
@@ -464,7 +470,6 @@
     cancelEditBtn.style.display = 'none';
   }
 
-  // Load seller's brand name from database
   async function loadSellerProfile() {
     if (!currentUser) return;
     const snapshot = await get(child(ref(db), `users/${currentUser.uid}`));
@@ -483,7 +488,6 @@
       await update(ref(db), { [`users/${currentUser.uid}/displayName`]: newName });
       await updateProfile(auth.currentUser, { displayName: newName });
       showSuccess('Brand name updated successfully');
-      // Also update all existing properties of this seller with new sellerName
       const propsRef = ref(db, 'properties');
       const q = query(propsRef, orderByChild('sellerId'), equalTo(currentUser.uid));
       const snapshot = await get(q);
@@ -497,66 +501,71 @@
 
   // ---------- CHAT SYSTEM ----------
   async function loadChats() {
-    if (!currentUser) return;
-    const chatsRef = ref(db, 'chats');
-    const q = query(chatsRef, orderByChild('sellerId'), equalTo(currentUser.uid));
-    const snapshot = await get(q);
-    if (!snapshot.exists()) {
-      chatListContainer.innerHTML = '<p style="padding:1rem;">No messages yet. Buyers will contact you from property pages.</p>';
+    if (!currentUser) {
+      console.warn("loadChats: No currentUser");
       return;
     }
-    let chats = [];
-    snapshot.forEach(child => {
-      chats.push({ id: child.key, ...child.val() });
-    });
-    // Fetch buyer names and property info
-    let html = '';
-    for (const chat of chats) {
-      const buyerSnap = await get(child(ref(db), `users/${chat.buyerId}`));
-      const buyerName = buyerSnap.exists() ? (buyerSnap.val().displayName || 'Buyer') : 'Buyer';
-      const propSnap = await get(child(ref(db), `properties/${chat.propertyId}`));
-      const propTitle = propSnap.exists() ? propSnap.val().location.split(',')[0] : 'Property';
-      const unreadBadge = (chat.sellerHasUnread === true) ? '<span class="unread-badge">New</span>' : '';
-      html += `
-        <div class="chat-item" data-chatid="${chat.id}" data-buyerid="${chat.buyerId}" data-buyername="${buyerName}">
-          <div class="chat-info">
-            <h4>${buyerName}</h4>
-            <p>${propTitle} · ${chat.lastMessage ? chat.lastMessage.substring(0, 40) : 'No messages yet'}</p>
-          </div>
-          ${unreadBadge}
-        </div>
-      `;
-    }
-    chatListContainer.innerHTML = html;
-    // Attach click handlers
-    document.querySelectorAll('.chat-item').forEach(el => {
-      el.addEventListener('click', () => {
-        const chatId = el.getAttribute('data-chatid');
-        const buyerId = el.getAttribute('data-buyerid');
-        const buyerName = el.getAttribute('data-buyername');
-        openChat(chatId, buyerId, buyerName);
-        // Mark as read
-        update(ref(db, `chats/${chatId}`), { sellerHasUnread: false });
-        el.querySelector('.unread-badge')?.remove();
+    console.log("loadChats: currentUser.uid =", currentUser.uid);
+    try {
+      const chatsRef = ref(db, 'chats');
+      const q = query(chatsRef, orderByChild('sellerId'), equalTo(currentUser.uid));
+      const snapshot = await get(q);
+      console.log("Chats snapshot exists?", snapshot.exists());
+      if (!snapshot.exists()) {
+        chatListContainer.innerHTML = '<p style="padding:1rem;">No messages yet. Buyers will contact you from property pages.</p>';
+        return;
+      }
+      let chats = [];
+      snapshot.forEach(child => {
+        chats.push({ id: child.key, ...child.val() });
       });
-    });
+      let html = '';
+      for (const chat of chats) {
+        const buyerSnap = await get(child(ref(db), `users/${chat.buyerId}`));
+        const buyerName = buyerSnap.exists() ? (buyerSnap.val().displayName || 'Buyer') : 'Buyer';
+        const propSnap = await get(child(ref(db), `properties/${chat.propertyId}`));
+        const propTitle = propSnap.exists() ? propSnap.val().location.split(',')[0] : 'Property';
+        const unreadBadge = (chat.sellerHasUnread === true) ? '<span class="unread-badge">New</span>' : '';
+        html += `
+          <div class="chat-item" data-chatid="${chat.id}" data-buyerid="${chat.buyerId}" data-buyername="${buyerName}">
+            <div class="chat-info">
+              <h4>${buyerName}</h4>
+              <p>${propTitle} · ${chat.lastMessage ? chat.lastMessage.substring(0, 40) : 'No messages yet'}</p>
+            </div>
+            ${unreadBadge}
+          </div>
+        `;
+      }
+      chatListContainer.innerHTML = html;
+      document.querySelectorAll('.chat-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const chatId = el.getAttribute('data-chatid');
+          const buyerId = el.getAttribute('data-buyerid');
+          const buyerName = el.getAttribute('data-buyername');
+          openChat(chatId, buyerId, buyerName);
+          update(ref(db, `chats/${chatId}`), { sellerHasUnread: false });
+          el.querySelector('.unread-badge')?.remove();
+        });
+      });
+    } catch (err) {
+      console.error("loadChats error:", err);
+      chatListContainer.innerHTML = '<p style="padding:1rem; color:red;">Error loading chats: ' + err.message + '</p>';
+    }
   }
 
-  let messageListener = null;
   function openChat(chatId, buyerId, buyerName) {
+    if (messageListener) messageListener();
     currentChatId = chatId;
     currentBuyerId = buyerId;
     currentBuyerName = buyerName;
     chatWithNameSpan.textContent = buyerName;
     chatPanel.style.display = 'block';
-    // Load messages
+    chatMessagesArea.innerHTML = '';
     const messagesRef = ref(db, `messages/${chatId}`);
-    if (messageListener) messageListener();
     messageListener = onChildAdded(messagesRef, (snapshot) => {
       const msg = snapshot.val();
       displayChatMessage(msg);
     });
-    // Also mark chat as read
     update(ref(db, `chats/${chatId}`), { sellerHasUnread: false });
   }
 
@@ -573,36 +582,34 @@
   async function sendChatMessage() {
     const text = chatMessageInput.value.trim();
     if (!text || !currentChatId) return;
-    const messageRef = push(ref(db, `messages/${currentChatId}`));
-    await set(messageRef, {
-      senderId: currentUser.uid,
-      text: text,
-      timestamp: Date.now()
-    });
-    await update(ref(db, `chats/${currentChatId}`), {
-      lastMessage: text,
-      lastUpdated: Date.now(),
-      buyerHasUnread: true  // buyer gets unread notification
-    });
-    chatMessageInput.value = '';
+    try {
+      const messageRef = push(ref(db, `messages/${currentChatId}`));
+      await set(messageRef, {
+        senderId: currentUser.uid,
+        text: text,
+        timestamp: Date.now()
+      });
+      await update(ref(db, `chats/${currentChatId}`), {
+        lastMessage: text,
+        lastUpdated: Date.now(),
+        buyerHasUnread: true
+      });
+      chatMessageInput.value = '';
+    } catch (err) {
+      console.error("Send error:", err);
+      showError("Failed to send message");
+    }
   }
 
   function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      return m;
-    });
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
   }
 
-  // Auto-refresh chats every 10 seconds
-  let refreshInterval;
   function startChatRefresh() {
     if (refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(() => {
-      loadChats();
+      if (currentUser) loadChats();
     }, 10000);
   }
 
@@ -612,8 +619,9 @@
   updateBrandBtn.addEventListener('click', updateSellerBrandName);
   sendChatBtn.addEventListener('click', sendChatMessage);
   chatMessageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+  document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'index.html'; });
 
-  // Auth
+  // Auth check
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = 'login.html?redirect=dashboard.html';
@@ -629,13 +637,8 @@
     }
     await loadSellerProfile();
     loadSellerProperties();
-    loadChats();
+    await loadChats();
     startChatRefresh();
-  });
-
-  document.getElementById('logoutBtn').addEventListener('click', async () => {
-    await signOut(auth);
-    window.location.href = 'index.html';
   });
 </script>
 </body>
