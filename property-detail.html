@@ -11,7 +11,6 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f2937; line-height: 1.5; }
     .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
-    /* Navbar */
     .navbar {
       background: white;
       box-shadow: 0 2px 12px rgba(0,0,0,0.05);
@@ -62,7 +61,6 @@
       font-weight: 600;
       cursor: pointer;
     }
-    /* Detail Layout */
     .detail-container { margin: 2rem 0; }
     .back-link {
       display: inline-block;
@@ -70,7 +68,6 @@
       color: #1e3a8a;
       text-decoration: none;
     }
-    /* Gallery */
     .gallery {
       background: #f3f4f6;
       border-radius: 1rem;
@@ -82,7 +79,6 @@
       height: 400px;
       background-size: cover;
       background-position: center;
-      transition: background-image 0.2s;
     }
     .thumbnail-row {
       display: flex;
@@ -98,10 +94,8 @@
       border-radius: 0.5rem;
       cursor: pointer;
       opacity: 0.7;
-      transition: opacity 0.2s;
     }
     .thumbnail.active { opacity: 1; border: 2px solid #d97706; }
-    /* Info grid */
     .info-grid {
       display: grid;
       grid-template-columns: 2fr 1fr;
@@ -135,7 +129,6 @@
       top: 100px;
     }
     .contact-btn { width: 100%; background: #d97706; margin-top: 1rem; }
-    .contact-btn:hover { background: #b45309; }
     .save-btn {
       background: white;
       border: 1px solid #1e3a8a;
@@ -144,7 +137,13 @@
       margin-top: 0.5rem;
     }
     .save-btn.saved { background: #1e3a8a; color: white; border: none; }
-    .save-btn.saved i { color: white; }
+    .offer-card {
+      background: #f8fafc;
+      border-radius: 1rem;
+      padding: 1.2rem;
+      margin-top: 1.5rem;
+      border: 1px solid #e2e8f0;
+    }
     .mortgage-calc {
       background: #f1f5f9;
       border-radius: 1rem;
@@ -204,7 +203,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getDatabase, ref, get, child, update } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getDatabase, ref, get, child, update, push, set, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
   const firebaseConfig = {
@@ -225,7 +224,6 @@
   let currentProperty = null;
   let currentUser = null;
   let isSaved = false;
-
   const detailContainer = document.getElementById('propertyDetail');
 
   function formatPrice(price) {
@@ -238,7 +236,6 @@
     return 'For Lease';
   }
 
-  // Store recently viewed in localStorage
   function storeRecentlyViewed(property) {
     let viewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
     viewed = viewed.filter(p => p.id !== property.id);
@@ -252,7 +249,6 @@
     localStorage.setItem('recentlyViewed', JSON.stringify(viewed));
   }
 
-  // Check if property is saved by current user
   async function checkSavedStatus() {
     if (!currentUser) return false;
     const snapshot = await get(child(ref(db), `users/${currentUser.uid}/savedProperties`));
@@ -260,7 +256,6 @@
     return saved.includes(currentProperty.id);
   }
 
-  // Toggle saved property
   async function toggleSaveProperty() {
     if (!currentUser) {
       window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
@@ -309,7 +304,101 @@
     setTimeout(() => toast.remove(), 3000);
   }
 
-  // Render full property details with gallery
+  // Offer functions
+  async function createOffer(propertyId, sellerId, amount) {
+    const offersRef = ref(db, 'offers');
+    const newRef = push(offersRef);
+    await set(newRef, {
+      propertyId: propertyId,
+      buyerId: currentUser.uid,
+      sellerId: sellerId,
+      amount: amount,
+      status: 'pending',
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+    showToast('Offer submitted! Seller will review it.', 'success');
+    setTimeout(() => location.reload(), 1500);
+  }
+
+  async function checkExistingOffer() {
+    if (!currentUser || currentUser.uid === currentProperty.sellerId) return null;
+    const offersRef = ref(db, 'offers');
+    const q = query(offersRef, orderByChild('propertyId'), equalTo(currentProperty.id));
+    const snapshot = await get(q);
+    let existingOffer = null;
+    snapshot.forEach(child => {
+      const off = child.val();
+      if (off.buyerId === currentUser.uid) existingOffer = { id: child.key, ...off };
+    });
+    return existingOffer;
+  }
+
+  async function renderOfferSection(propertyId, sellerId) {
+    if (!currentUser || currentUser.uid === sellerId) return;
+    const existingOffer = await checkExistingOffer();
+    const offerDiv = document.createElement('div');
+    offerDiv.className = 'offer-card';
+    offerDiv.innerHTML = '<h3><i class="fas fa-tag"></i> Make an Offer</h3>';
+    if (existingOffer) {
+      const statusText = existingOffer.status === 'pending' ? 'Pending Seller Response' :
+                         existingOffer.status === 'accepted' ? 'Accepted! 🎉' :
+                         existingOffer.status === 'rejected' ? 'Rejected' :
+                         existingOffer.status === 'countered' ? `Seller countered: $${existingOffer.counterAmount.toLocaleString()}` : '';
+      offerDiv.innerHTML += `
+        <p><strong>Your offer:</strong> $${existingOffer.amount.toLocaleString()}</p>
+        <p><strong>Status:</strong> ${statusText}</p>
+      `;
+      if (existingOffer.status === 'countered') {
+        offerDiv.innerHTML += `<button id="acceptCounterBtn" class="btn-primary" style="margin-top:0.5rem;">Accept Counter Offer</button>`;
+      }
+      if (existingOffer.status === 'rejected') {
+        offerDiv.innerHTML += `<button id="newOfferBtn" class="btn-primary" style="margin-top:0.5rem;">Make New Offer</button>`;
+      }
+    } else {
+      offerDiv.innerHTML += `
+        <input type="number" id="offerAmount" placeholder="Your offer amount ($)" style="width:100%; margin:0.5rem 0; padding:0.5rem;">
+        <button id="submitOfferBtn" class="btn-primary">Submit Offer</button>
+      `;
+    }
+    // Append after seller card
+    const sellerCard = document.querySelector('.seller-card');
+    if (sellerCard && !document.querySelector('.offer-card')) {
+      sellerCard.insertAdjacentElement('afterend', offerDiv);
+    } else {
+      const oldOffer = document.querySelector('.offer-card');
+      if (oldOffer) oldOffer.replaceWith(offerDiv);
+      else if (sellerCard) sellerCard.insertAdjacentElement('afterend', offerDiv);
+    }
+
+    // Attach event listeners
+    const submitBtn = document.getElementById('submitOfferBtn');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', async () => {
+        const amount = parseFloat(document.getElementById('offerAmount').value);
+        if (isNaN(amount) || amount <= 0) { alert('Enter a valid amount'); return; }
+        await createOffer(propertyId, sellerId, amount);
+      });
+    }
+    const acceptCounterBtn = document.getElementById('acceptCounterBtn');
+    if (acceptCounterBtn && existingOffer) {
+      acceptCounterBtn.addEventListener('click', async () => {
+        await update(ref(db, `offers/${existingOffer.id}`), { status: 'accepted', updatedAt: Date.now() });
+        showToast('You accepted the counter offer! Seller will be notified.', 'success');
+        setTimeout(() => location.reload(), 1500);
+      });
+    }
+    const newOfferBtn = document.getElementById('newOfferBtn');
+    if (newOfferBtn) {
+      newOfferBtn.addEventListener('click', async () => {
+        const newAmount = prompt('Enter your new offer amount:');
+        if (newAmount && !isNaN(parseFloat(newAmount))) {
+          await createOffer(propertyId, sellerId, parseFloat(newAmount));
+        }
+      });
+    }
+  }
+
   function renderProperty(property, id) {
     const images = property.images && property.images.length ? property.images : ['https://via.placeholder.com/800x400?text=No+Image'];
     const listingLabel = getListingLabel(property.listingType);
@@ -378,7 +467,7 @@
 
     detailContainer.innerHTML = fullHtml;
 
-    // Gallery thumbnail click
+    // Gallery thumbnails
     const thumbnails = document.querySelectorAll('.thumbnail');
     const mainImageDiv = document.getElementById('mainImage');
     thumbnails.forEach(thumb => {
@@ -423,42 +512,40 @@
       }, 100);
     }
 
-    // Contact button logic
+    // Contact button
     const contactBtn = document.getElementById('contactSellerBtn');
     if (contactBtn) {
       if (!currentUser) {
         contactBtn.textContent = 'Log in to Contact Seller';
-        contactBtn.onclick = () => {
-          window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
-        };
+        contactBtn.onclick = () => window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
       } else if (currentUser.uid === property.sellerId) {
         contactBtn.textContent = 'This is your property';
         contactBtn.disabled = true;
         contactBtn.style.opacity = '0.6';
       } else {
         contactBtn.textContent = 'Contact Seller';
-        contactBtn.onclick = () => {
-          window.location.href = `chat.html?propertyId=${id}&sellerId=${property.sellerId}`;
-        };
+        contactBtn.onclick = () => window.location.href = `chat.html?propertyId=${id}&sellerId=${property.sellerId}`;
       }
     }
 
-    // Save button logic
-    const saveBtn = document.getElementById('savePropertyBtn');
-    if (saveBtn && currentUser) {
+    // Save button
+    const saveBtnElem = document.getElementById('savePropertyBtn');
+    if (saveBtnElem && currentUser) {
       checkSavedStatus().then(saved => {
         isSaved = saved;
         updateSaveButtonUI();
-        saveBtn.onclick = toggleSaveProperty;
+        saveBtnElem.onclick = toggleSaveProperty;
       });
-    } else if (saveBtn && !currentUser) {
-      saveBtn.onclick = () => {
-        window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
-      };
+    } else if (saveBtnElem && !currentUser) {
+      saveBtnElem.onclick = () => window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
+    }
+
+    // Offer section (render after seller card is in DOM)
+    if (currentUser && currentUser.uid !== property.sellerId) {
+      renderOfferSection(id, property.sellerId);
     }
   }
 
-  // Load property from URL id
   async function loadProperty() {
     const urlParams = new URLSearchParams(window.location.search);
     const propertyId = urlParams.get('id');
@@ -481,14 +568,13 @@
     }
   }
 
-  // Auth buttons (top nav)
+  // Auth buttons
   document.getElementById('loginNavBtn')?.addEventListener('click', () => window.location.href = 'login.html');
   document.getElementById('signupNavBtn')?.addEventListener('click', () => window.location.href = 'login.html?signup=true');
 
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
     if (currentProperty) {
-      // re-render contact button and save button if property already loaded
       renderProperty(currentProperty, currentProperty.id);
     }
   });
