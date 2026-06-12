@@ -110,7 +110,6 @@
       cursor: pointer;
     }
     .chat-item:hover { background: #f1f5f9; }
-    .chat-item.active { background: #e0e7ff; }
     .chat-info h4 { font-size: 0.9rem; margin-bottom: 0.2rem; }
     .chat-info p { font-size: 0.75rem; color: #6b7280; }
     .unread-badge { background: #dc2626; color: white; border-radius: 50%; padding: 0.2rem 0.5rem; font-size: 0.7rem; }
@@ -145,8 +144,30 @@
     .message-time { font-size: 0.65rem; color: #9ca3af; margin-top: 0.2rem; }
     .chat-input { display: flex; gap: 0.5rem; }
     .chat-input input { flex: 1; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 2rem; }
-    .success { background: #dcfce7; color: #16a34a; padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 1rem; display: none; }
-    .error { background: #fee2e2; color: #dc2626; padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 1rem; display: none; }
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #e2e8f0;
+      margin: 1rem 0 1.5rem;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 0.5rem 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #6b7280;
+    }
+    .tab-btn.active { color: #1e3a8a; border-bottom: 2px solid #d97706; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .offer-item {
+      border-bottom: 1px solid #e2e8f0;
+      padding: 1rem;
+    }
+    .success { background: #dcfce7; color: #16a34a; padding: 0.5rem; border-radius: 0.5rem; margin: 1rem 0; display: none; }
+    .error { background: #fee2e2; color: #dc2626; padding: 0.5rem; border-radius: 0.5rem; margin: 1rem 0; display: none; }
     footer {
       background: #0f172a;
       color: #cbd5e1;
@@ -172,24 +193,31 @@
 <div class="container">
   <div class="dashboard-title">
     <h1>Seller Dashboard</h1>
-    <p>Manage your properties, profile, and messages</p>
+    <p>Manage your properties, offers, and messages</p>
   </div>
 
   <div id="successMsg" class="success"></div>
   <div id="errorMsg" class="error"></div>
 
-  <!-- Seller Profile / Brand Name -->
+  <!-- Brand Name -->
   <div class="card" style="margin-bottom: 1.5rem;">
     <h2>Your Brand / Display Name</h2>
     <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
       <input type="text" id="sellerDisplayName" placeholder="e.g., ABC Realty, John's Properties" style="flex:1; padding:0.6rem; border:1px solid #e2e8f0; border-radius:0.5rem;">
       <button id="updateBrandBtn" class="btn-primary">Update Brand Name</button>
     </div>
-    <p style="font-size:0.75rem; color:#6b7280; margin-top:0.5rem;">This name will appear on your property listings.</p>
+    <p style="font-size:0.75rem; color:#6b7280; margin-top:0.5rem;">This name appears on your property listings.</p>
   </div>
 
-  <div class="dashboard-layout">
-    <!-- Left Column: Property Management -->
+  <!-- Main Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="properties">Properties</button>
+    <button class="tab-btn" data-tab="chats">Messages</button>
+    <button class="tab-btn" data-tab="offers">Offers Received</button>
+  </div>
+
+  <!-- Properties Tab (CRUD) -->
+  <div id="propertiesTab" class="tab-content active">
     <div class="card">
       <h2 id="formTitle">Add New Property</h2>
       <input type="hidden" id="propertyId" value="">
@@ -220,13 +248,13 @@
       <h2 style="margin-top: 2rem;">Your Properties</h2>
       <div id="propertiesList" class="property-table"><p>Loading properties...</p></div>
     </div>
+  </div>
 
-    <!-- Right Column: Chat Inbox & Messaging -->
+  <!-- Chats Tab -->
+  <div id="chatsTab" class="tab-content">
     <div class="card">
       <h2>Messages from Buyers</h2>
-      <div id="chatListContainer" class="chat-list">
-        <p>Loading conversations...</p>
-      </div>
+      <div id="chatListContainer" class="chat-list"><p>Loading conversations...</p></div>
       <div id="chatPanel" class="chat-panel" style="display: none;">
         <h3 id="chatWithName">Chat with <span></span></h3>
         <div id="chatMessagesArea" class="messages-area"></div>
@@ -237,11 +265,17 @@
       </div>
     </div>
   </div>
+
+  <!-- Offers Tab -->
+  <div id="offersTab" class="tab-content">
+    <div class="card">
+      <h2>Offers Received</h2>
+      <div id="offersList"><p>Loading offers...</p></div>
+    </div>
+  </div>
 </div>
 
-<footer>
-  <p>&copy; 2025 Dominion Home Hub – Seller Dashboard</p>
-</footer>
+<footer><p>&copy; 2025 Dominion Home Hub – Seller Dashboard</p></footer>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
@@ -501,24 +535,16 @@
 
   // ---------- CHAT SYSTEM ----------
   async function loadChats() {
-    if (!currentUser) {
-      console.warn("loadChats: No currentUser");
-      return;
-    }
-    console.log("loadChats: currentUser.uid =", currentUser.uid);
+    if (!currentUser) return;
     try {
-      const chatsRef = ref(db, 'chats');
-      const q = query(chatsRef, orderByChild('sellerId'), equalTo(currentUser.uid));
+      const q = query(ref(db, 'chats'), orderByChild('sellerId'), equalTo(currentUser.uid));
       const snapshot = await get(q);
-      console.log("Chats snapshot exists?", snapshot.exists());
       if (!snapshot.exists()) {
-        chatListContainer.innerHTML = '<p style="padding:1rem;">No messages yet. Buyers will contact you from property pages.</p>';
+        chatListContainer.innerHTML = '<p>No messages yet. Buyers will contact you from property pages.</p>';
         return;
       }
       let chats = [];
-      snapshot.forEach(child => {
-        chats.push({ id: child.key, ...child.val() });
-      });
+      snapshot.forEach(child => chats.push({ id: child.key, ...child.val() }));
       let html = '';
       for (const chat of chats) {
         const buyerSnap = await get(child(ref(db), `users/${chat.buyerId}`));
@@ -548,8 +574,8 @@
         });
       });
     } catch (err) {
-      console.error("loadChats error:", err);
-      chatListContainer.innerHTML = '<p style="padding:1rem; color:red;">Error loading chats: ' + err.message + '</p>';
+      console.error(err);
+      chatListContainer.innerHTML = '<p>Error loading chats.</p>';
     }
   }
 
@@ -595,10 +621,7 @@
         buyerHasUnread: true
       });
       chatMessageInput.value = '';
-    } catch (err) {
-      console.error("Send error:", err);
-      showError("Failed to send message");
-    }
+    } catch (err) { console.error(err); showError('Failed to send message'); }
   }
 
   function escapeHtml(str) {
@@ -606,10 +629,101 @@
     return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
   }
 
-  function startChatRefresh() {
+  // ---------- OFFERS ----------
+  async function loadOffers() {
+    if (!currentUser) return;
+    const offersRef = ref(db, 'offers');
+    const q = query(offersRef, orderByChild('sellerId'), equalTo(currentUser.uid));
+    const snapshot = await get(q);
+    if (!snapshot.exists()) {
+      document.getElementById('offersList').innerHTML = '<p>No offers received yet.</p>';
+      return;
+    }
+    let offers = [];
+    snapshot.forEach(child => offers.push({ id: child.key, ...child.val() }));
+    let html = '';
+    for (const offer of offers) {
+      const propSnap = await get(child(ref(db), `properties/${offer.propertyId}`));
+      const buyerSnap = await get(child(ref(db), `users/${offer.buyerId}`));
+      const propTitle = propSnap.exists() ? propSnap.val().location.split(',')[0] : 'Property';
+      const buyerName = buyerSnap.exists() ? buyerSnap.val().displayName || 'Buyer' : 'Buyer';
+      html += `
+        <div class="offer-item" data-offerid="${offer.id}">
+          <div><strong>${buyerName}</strong> offered <strong>$${offer.amount.toLocaleString()}</strong> on <strong>${propTitle}</strong></div>
+          <div>Status: <span id="status-${offer.id}">${offer.status}</span></div>
+          <div style="margin-top:0.5rem;">
+      `;
+      if (offer.status === 'pending') {
+        html += `
+          <button class="accept-offer btn-primary" data-id="${offer.id}">Accept</button>
+          <button class="reject-offer btn-outline" data-id="${offer.id}">Reject</button>
+          <input type="number" id="counter-${offer.id}" placeholder="Counter amount" style="width:120px; margin-left:0.5rem; padding:0.3rem;">
+          <button class="counter-offer btn-outline" data-id="${offer.id}">Counter</button>
+        `;
+      } else if (offer.status === 'countered') {
+        html += `<span>You countered: $${offer.counterAmount.toLocaleString()}. Waiting for buyer response.</span>`;
+      } else if (offer.status === 'accepted') {
+        html += `<span class="success-text">✅ Offer accepted! Contact buyer to proceed.</span>`;
+      } else if (offer.status === 'rejected') {
+        html += `<span class="error-text">❌ Offer rejected</span>`;
+      }
+      html += `</div></div>`;
+    }
+    document.getElementById('offersList').innerHTML = html;
+
+    // Attach event listeners
+    document.querySelectorAll('.accept-offer').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const offerId = btn.getAttribute('data-id');
+        await update(ref(db, `offers/${offerId}`), { status: 'accepted', updatedAt: Date.now() });
+        loadOffers();
+      });
+    });
+    document.querySelectorAll('.reject-offer').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const offerId = btn.getAttribute('data-id');
+        await update(ref(db, `offers/${offerId}`), { status: 'rejected', updatedAt: Date.now() });
+        loadOffers();
+      });
+    });
+    document.querySelectorAll('.counter-offer').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const offerId = btn.getAttribute('data-id');
+        const counterAmount = parseFloat(document.getElementById(`counter-${offerId}`).value);
+        if (isNaN(counterAmount) || counterAmount <= 0) { alert('Enter valid counter amount'); return; }
+        await update(ref(db, `offers/${offerId}`), {
+          status: 'countered',
+          counterAmount: counterAmount,
+          updatedAt: Date.now()
+        });
+        loadOffers();
+      });
+    });
+  }
+
+  // Tab switching
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.getElementById(`${tabId}Tab`).classList.add('active');
+    if (tabId === 'offers') loadOffers();
+    if (tabId === 'chats') loadChats();
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const tabId = btn.getAttribute('data-tab');
+      switchTab(tabId);
+    });
+  });
+
+  // Auto refresh for chats and offers
+  function startRefresh() {
     if (refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(() => {
-      if (currentUser) loadChats();
+      if (document.querySelector('.tab-btn.active').getAttribute('data-tab') === 'chats') loadChats();
+      if (document.querySelector('.tab-btn.active').getAttribute('data-tab') === 'offers') loadOffers();
     }, 10000);
   }
 
@@ -621,7 +735,7 @@
   chatMessageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
   document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'index.html'; });
 
-  // Auth check
+  // Auth
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = 'login.html?redirect=dashboard.html';
@@ -637,8 +751,9 @@
     }
     await loadSellerProfile();
     loadSellerProperties();
-    await loadChats();
-    startChatRefresh();
+    loadChats();
+    loadOffers();
+    startRefresh();
   });
 </script>
 </body>
