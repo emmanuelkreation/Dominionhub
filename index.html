@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* All existing styles remain exactly the same as before */
+    /* All styles remain exactly the same as before – no changes needed */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1f2937; line-height: 1.5; }
     .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
@@ -65,7 +65,7 @@
       cursor: pointer;
     }
     .hero {
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://i.pinimg.com/1200x/a5/bf/3c/a5bf3cb953b15cec09e2feb363307cf8.jpg?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
+      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1560518883-ce09059eeffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
       background-size: cover;
       background-position: center 30%;
       padding: 5rem 0 6rem;
@@ -291,7 +291,6 @@
       <a href="listings.html?type=lease">Lease</a>
       <button class="btn-outline" id="loginNavBtn">Log in</button>
       <button class="btn-primary" id="signupNavBtn">Sign up</button>
-      <!-- Optional: Dashboard button will appear here after login -->
       <button id="dashboardBtn" class="btn-primary" style="display: none;">Dashboard</button>
     </div>
   </div>
@@ -396,7 +395,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getDatabase, ref, query, orderByChild, equalTo, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getDatabase, ref, query, orderByChild, equalTo, get, child } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
   const firebaseConfig = {
@@ -424,6 +423,18 @@
   
   let currentListingType = 'buy';
   let currentUser = null;
+  let currentUserRole = null;
+
+  // Helper to get user role from database
+  async function getUserRole(uid) {
+    try {
+      const snapshot = await get(child(ref(db), `users/${uid}/role`));
+      return snapshot.exists() ? snapshot.val() : null;
+    } catch (err) {
+      console.error("Error fetching role:", err);
+      return null;
+    }
+  }
 
   function formatPrice(price) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price);
@@ -519,17 +530,14 @@
     window.location.href = `listings.html?type=${currentListingType}`;
   });
 
-  // List Property button - redirect based on auth status and role
-  const listPropertyBtn = document.querySelector('#listPropCard .btn-primary');
-  if (listPropertyBtn) {
-    listPropertyBtn.addEventListener('click', async () => {
+  // List Property button
+  const listPropBtn = document.querySelector('#listPropCard .btn-primary');
+  if (listPropBtn) {
+    listPropBtn.addEventListener('click', async () => {
       if (!currentUser) {
         window.location.href = 'login.html?redirect=dashboard.html';
       } else {
-        // Check user role
-        const roleRef = ref(db, `users/${currentUser.uid}/role`);
-        const snapshot = await get(roleRef);
-        const role = snapshot.val();
+        const role = await getUserRole(currentUser.uid);
         if (role === 'seller') {
           window.location.href = 'dashboard.html';
         } else {
@@ -543,12 +551,18 @@
   document.getElementById('findAgentCard')?.querySelector('button')?.addEventListener('click', () => alert("Agent partnership portal coming soon."));
   document.getElementById('mortgageCard')?.querySelector('button')?.addEventListener('click', () => alert("Mortgage calculator available on property pages."));
 
-  // Dashboard button click
-  dashboardBtn?.addEventListener('click', () => {
-    window.location.href = 'dashboard.html';
+  // Dashboard button click – redirect based on role
+  dashboardBtn?.addEventListener('click', async () => {
+    if (!currentUser) return;
+    const role = await getUserRole(currentUser.uid);
+    if (role === 'seller') {
+      window.location.href = 'dashboard.html';
+    } else {
+      window.location.href = 'buyer-dashboard.html';
+    }
   });
 
-  // Logout function (optional)
+  // Add logout button dynamically
   function addLogoutButton() {
     const navLinks = document.querySelector('.nav-links');
     if (navLinks && !document.getElementById('logoutNavBtn')) {
@@ -569,12 +583,13 @@
   onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     if (user) {
-      // User is logged in
+      currentUserRole = await getUserRole(user.uid);
       loginBtn.style.display = 'none';
       signupBtn.style.display = 'none';
       dashboardBtn.style.display = 'inline-block';
       addLogoutButton();
     } else {
+      currentUserRole = null;
       loginBtn.style.display = 'inline-block';
       signupBtn.style.display = 'inline-block';
       dashboardBtn.style.display = 'none';
