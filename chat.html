@@ -177,7 +177,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getDatabase, ref, push, set, get, child, update, onChildAdded, query, orderByChild } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getDatabase, ref, push, set, get, child, update, query, orderByChild, onChildAdded } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
@@ -200,7 +200,7 @@
 
   let currentUser = null;
   let chatId = null;
-  let propertyData = null;
+  let messageListener = null;
 
   const propertySummaryDiv = document.getElementById('propertySummary');
   const messagesArea = document.getElementById('messagesArea');
@@ -220,11 +220,11 @@
     }
     const snapshot = await get(child(ref(db), `properties/${propertyId}`));
     if (snapshot.exists()) {
-      propertyData = snapshot.val();
-      const imageUrl = propertyData.images?.length ? propertyData.images[0] : 'https://via.placeholder.com/60';
+      const prop = snapshot.val();
+      const imageUrl = prop.images?.length ? prop.images[0] : 'https://via.placeholder.com/60';
       document.querySelector('.prop-img').style.backgroundImage = `url('${imageUrl}')`;
-      document.querySelector('.prop-details h3').textContent = `${propertyData.propertyType} at ${propertyData.location.split(',')[0]}`;
-      document.querySelector('.prop-details p').textContent = `$${propertyData.price.toLocaleString()} - ${propertyData.listingType === 'buy' ? 'For Sale' : (propertyData.listingType === 'rent' ? 'For Rent' : 'For Lease')}`;
+      document.querySelector('.prop-details h3').textContent = `${prop.propertyType} at ${prop.location.split(',')[0]}`;
+      document.querySelector('.prop-details p').textContent = `$${prop.price.toLocaleString()} - ${prop.listingType === 'buy' ? 'For Sale' : (prop.listingType === 'rent' ? 'For Rent' : 'For Lease')}`;
     } else {
       propertySummaryDiv.innerHTML = '<div class="prop-details"><h3>Property not found</h3></div>';
     }
@@ -256,10 +256,12 @@
       chatId = newChatRef.key;
       const buyerId = (currentUser.uid !== sellerId) ? currentUser.uid : sellerId;
       const sellerIdFinal = (currentUser.uid !== sellerId) ? sellerId : currentUser.uid;
+      const buyerName = currentUser.displayName || 'Buyer';
       await set(newChatRef, {
         propertyId: propertyId,
         buyerId: buyerId,
         sellerId: sellerIdFinal,
+        buyerName: buyerName,
         lastMessage: '',
         lastUpdated: Date.now(),
         buyerHasUnread: false,
@@ -269,14 +271,19 @@
     return chatId;
   }
 
-  function listenToMessages() {
+  function loadMessages() {
     if (!chatId) return;
+    // Clear previous listener
+    if (messageListener) messageListener();
     const messagesRef = ref(db, `messages/${chatId}`);
     const messagesQuery = query(messagesRef, orderByChild('timestamp'));
-    onChildAdded(messagesQuery, (snapshot) => {
+    // Clear existing messages area
+    messagesArea.innerHTML = '';
+    messageListener = onChildAdded(messagesQuery, (snapshot) => {
       const msg = snapshot.val();
       displayMessage(msg);
     });
+    // Mark unread as false
     const isSeller = (currentUser.uid === sellerId);
     update(ref(db, `chats/${chatId}`), {
       [isSeller ? 'sellerHasUnread' : 'buyerHasUnread']: false
@@ -284,9 +291,6 @@
   }
 
   function displayMessage(msg) {
-    if (messagesArea.children.length === 1 && messagesArea.children[0].innerText.includes('Loading')) {
-      messagesArea.innerHTML = '';
-    }
     const isSent = (msg.senderId === currentUser.uid);
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
@@ -295,6 +299,7 @@
       <div class="message-time">${formatTime(msg.timestamp)}</div>
     `;
     messagesArea.appendChild(messageDiv);
+    // Auto-scroll to bottom
     messagesArea.scrollTop = messagesArea.scrollHeight;
   }
 
@@ -310,10 +315,7 @@
 
   async function sendMessage() {
     const text = messageInput.value.trim();
-    if (!text || !chatId) {
-      console.warn("Cannot send: no chatId", chatId);
-      return;
-    }
+    if (!text || !chatId) return;
     try {
       const messageRef = push(ref(db, `messages/${chatId}`));
       await set(messageRef, {
@@ -327,9 +329,8 @@
         [currentUser.uid === sellerId ? 'buyerHasUnread' : 'sellerHasUnread']: true
       });
       messageInput.value = '';
-      messagesArea.scrollTop = messagesArea.scrollHeight;
     } catch (err) {
-      console.error("Send message error:", err);
+      console.error("Send error:", err);
       alert("Failed to send message. Check console.");
     }
   }
@@ -343,9 +344,9 @@
     await loadProperty();
     await getOrCreateChat();
     if (chatId) {
-      listenToMessages();
+      loadMessages();
     } else {
-      messagesArea.innerHTML = '<div style="text-align:center; padding:2rem;">Unable to create chat. Please try again.</div>';
+      messagesArea.innerHTML = '<div style="text-align:center; padding:2rem;">Unable to start chat.</div>';
     }
   });
 
