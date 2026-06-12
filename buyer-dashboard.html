@@ -10,7 +10,6 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f2937; }
     .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
-    /* Navbar */
     .navbar {
       background: white;
       box-shadow: 0 2px 12px rgba(0,0,0,0.05);
@@ -51,9 +50,7 @@
       font-weight: 600;
       cursor: pointer;
     }
-    .dashboard-header {
-      margin: 2rem 0 1rem;
-    }
+    .dashboard-header { margin: 2rem 0 1rem; }
     .welcome-card {
       background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
       border-radius: 1.5rem;
@@ -61,10 +58,7 @@
       color: white;
       margin-bottom: 2rem;
     }
-    .welcome-card h1 {
-      font-size: 1.8rem;
-      margin-bottom: 0.5rem;
-    }
+    .welcome-card h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -78,16 +72,8 @@
       text-align: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
-    .stat-number {
-      font-size: 2rem;
-      font-weight: 800;
-      color: #1e3a8a;
-    }
-    .stat-label {
-      color: #6b7280;
-      font-size: 0.85rem;
-      margin-top: 0.3rem;
-    }
+    .stat-number { font-size: 2rem; font-weight: 800; color: #1e3a8a; }
+    .stat-label { color: #6b7280; font-size: 0.85rem; margin-top: 0.3rem; }
     .profile-card {
       background: white;
       border-radius: 1rem;
@@ -121,12 +107,8 @@
       color: #1e3a8a;
       border-bottom: 2px solid #d97706;
     }
-    .tab-content {
-      display: none;
-    }
-    .tab-content.active {
-      display: block;
-    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
     .property-item, .chat-item, .search-item {
       display: flex;
       justify-content: space-between;
@@ -200,7 +182,6 @@
       <p>Discover your dream home, manage saved properties, and chat with sellers.</p>
     </div>
 
-    <!-- Stats -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-number" id="savedCount">0</div>
@@ -216,7 +197,6 @@
       </div>
     </div>
 
-    <!-- Profile Card -->
     <div class="profile-card">
       <div class="profile-info">
         <h3><i class="fas fa-user"></i> <span id="profileName"></span></h3>
@@ -229,7 +209,6 @@
       </div>
     </div>
 
-    <!-- Tabs -->
     <div class="tabs">
       <button class="tab-btn active" data-tab="saved">Saved Properties</button>
       <button class="tab-btn" data-tab="chats">Active Chats</button>
@@ -237,17 +216,8 @@
       <button class="tab-btn" data-tab="recent">Recently Viewed</button>
     </div>
 
-    <!-- Saved Properties Tab -->
-    <div id="savedTab" class="tab-content active">
-      <div id="savedPropertiesList">Loading...</div>
-    </div>
-
-    <!-- Chats Tab -->
-    <div id="chatsTab" class="tab-content">
-      <div id="chatsList">Loading...</div>
-    </div>
-
-    <!-- Saved Searches Tab -->
+    <div id="savedTab" class="tab-content active"><div id="savedPropertiesList">Loading...</div></div>
+    <div id="chatsTab" class="tab-content"><div id="chatsList">Loading...</div></div>
     <div id="searchesTab" class="tab-content">
       <div id="savedSearchesList">Loading...</div>
       <div class="save-search-form">
@@ -256,19 +226,11 @@
       </div>
       <p style="font-size:0.7rem; margin-top:0.5rem; color:#6b7280;">Saves the filters you last used on the listings page.</p>
     </div>
-
-    <!-- Recently Viewed Tab -->
-    <div id="recentTab" class="tab-content">
-      <div id="recentlyViewedList">Loading...</div>
-    </div>
+    <div id="recentTab" class="tab-content"><div id="recentlyViewedList">Loading...</div></div>
   </div>
 </div>
 
-<footer>
-  <div class="container">
-    <p>&copy; 2025 Dominion Home Hub – Buyer Dashboard</p>
-  </div>
-</footer>
+<footer><div class="container"><p>&copy; 2025 Dominion Home Hub – Buyer Dashboard</p></div></footer>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
@@ -317,14 +279,12 @@
   function showSuccess(msg) { successDiv.textContent = msg; successDiv.style.display = 'block'; setTimeout(() => successDiv.style.display = 'none', 4000); }
   function showError(msg) { errorDiv.textContent = msg; errorDiv.style.display = 'block'; setTimeout(() => errorDiv.style.display = 'none', 5000); }
 
-  // Format date
   function formatDate(timestamp) {
     if (!timestamp) return 'Unknown';
     const date = new Date(timestamp);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
   }
 
-  // Load user profile and data
   async function loadUserData() {
     if (!currentUser) return;
     const userRef = ref(db, `users/${currentUser.uid}`);
@@ -334,7 +294,6 @@
       savedPropertiesIds = userData.savedProperties || [];
       savedSearches = userData.savedSearches || [];
     } else {
-      // Create user document if missing
       await update(ref(db, `users/${currentUser.uid}`), {
         email: currentUser.email,
         displayName: currentUser.displayName || 'Buyer',
@@ -346,7 +305,6 @@
       savedPropertiesIds = [];
       savedSearches = [];
     }
-    // Update UI
     const displayName = userData?.displayName || currentUser.displayName || 'Buyer';
     profileNameSpan.textContent = displayName;
     userNameSpan.textContent = displayName.split(' ')[0];
@@ -354,16 +312,14 @@
     const memberDate = userData?.createdAt ? new Date(userData.createdAt) : new Date();
     memberSinceSpan.textContent = formatDate(memberDate);
     editNameInput.value = displayName;
-    // Update stats
     savedCountSpan.textContent = savedPropertiesIds.length;
     searchesCountSpan.textContent = savedSearches.length;
     await loadSavedProperties();
-    loadChats();
+    await loadChats();
     renderSavedSearches();
     loadRecentlyViewed();
   }
 
-  // Update display name
   async function updateDisplayName() {
     const newName = editNameInput.value.trim();
     if (!newName) { showError('Name cannot be empty'); return; }
@@ -376,7 +332,6 @@
     } catch (err) { showError(err.message); }
   }
 
-  // Saved properties
   async function loadSavedProperties() {
     if (!savedPropertiesIds.length) {
       savedPropsDiv.innerHTML = '<p>No saved properties. Click ❤️ on property cards to save.</p>';
@@ -387,9 +342,10 @@
     for (const id of savedPropertiesIds) {
       const snapshot = await get(child(ref(db), `properties/${id}`));
       if (snapshot.exists()) properties.push({ id, ...snapshot.val() });
+      else console.warn(`Property ${id} not found`);
     }
     if (!properties.length) {
-      savedPropsDiv.innerHTML = '<p>No saved properties found.</p>';
+      savedPropsDiv.innerHTML = '<p>No saved properties found (some may have been deleted).</p>';
       return;
     }
     let html = '';
@@ -428,50 +384,55 @@
     savedPropertiesIds = newList;
     savedCountSpan.textContent = savedPropertiesIds.length;
     showSuccess('Property removed');
-    loadSavedProperties();
+    await loadSavedProperties();
   }
 
-  // Chats
   async function loadChats() {
     if (!currentUser) return;
-    const q = query(ref(db, 'chats'), orderByChild('buyerId'), equalTo(currentUser.uid));
-    const snapshot = await get(q);
-    if (!snapshot.exists()) {
-      chatsDiv.innerHTML = '<p>No active chats. Contact sellers from property pages.</p>';
-      chatsCountSpan.textContent = '0';
-      return;
-    }
-    const chats = [];
-    snapshot.forEach(child => chats.push({ id: child.key, ...child.val() }));
-    chatsCountSpan.textContent = chats.length;
-    let html = '';
-    for (const chat of chats) {
-      const propSnap = await get(child(ref(db), `properties/${chat.propertyId}`));
-      const sellerSnap = await get(child(ref(db), `users/${chat.sellerId}`));
-      const sellerName = sellerSnap.exists() ? (sellerSnap.val().displayName || 'Seller') : 'Seller';
-      const propTitle = propSnap.exists() ? propSnap.val().location.split(',')[0] : 'Property';
-      const unread = chat.buyerHasUnread ? '<span class="unread-badge">New</span>' : '';
-      html += `
-        <div class="chat-item" data-chatid="${chat.id}" data-propid="${chat.propertyId}" data-sellerid="${chat.sellerId}">
-          <div class="chat-info">
-            <strong>${sellerName}</strong> on ${propTitle}
-            <p>${chat.lastMessage ? chat.lastMessage.substring(0, 40) : 'No messages yet'}</p>
+    console.log("Loading chats for buyer:", currentUser.uid);
+    try {
+      const q = query(ref(db, 'chats'), orderByChild('buyerId'), equalTo(currentUser.uid));
+      const snapshot = await get(q);
+      console.log("Chats snapshot exists?", snapshot.exists());
+      if (!snapshot.exists()) {
+        chatsDiv.innerHTML = '<p>No active chats. Contact sellers from property pages.</p>';
+        chatsCountSpan.textContent = '0';
+        return;
+      }
+      const chats = [];
+      snapshot.forEach(child => chats.push({ id: child.key, ...child.val() }));
+      chatsCountSpan.textContent = chats.length;
+      let html = '';
+      for (const chat of chats) {
+        const propSnap = await get(child(ref(db), `properties/${chat.propertyId}`));
+        const sellerSnap = await get(child(ref(db), `users/${chat.sellerId}`));
+        const sellerName = sellerSnap.exists() ? (sellerSnap.val().displayName || 'Seller') : 'Seller';
+        const propTitle = propSnap.exists() ? propSnap.val().location.split(',')[0] : 'Property';
+        const unread = chat.buyerHasUnread ? '<span class="unread-badge">New</span>' : '';
+        html += `
+          <div class="chat-item" data-chatid="${chat.id}" data-propid="${chat.propertyId}" data-sellerid="${chat.sellerId}">
+            <div class="chat-info">
+              <strong>${sellerName}</strong> on ${propTitle}
+              <p>${chat.lastMessage ? chat.lastMessage.substring(0, 40) : 'No messages yet'}</p>
+            </div>
+            ${unread}
           </div>
-          ${unread}
-        </div>
-      `;
-    }
-    chatsDiv.innerHTML = html || '<p>No chats yet.</p>';
-    document.querySelectorAll('#chatsTab .chat-item').forEach(el => {
-      el.addEventListener('click', () => {
-        const propId = el.getAttribute('data-propid');
-        const sellerId = el.getAttribute('data-sellerid');
-        window.location.href = `chat.html?propertyId=${propId}&sellerId=${sellerId}`;
+        `;
+      }
+      chatsDiv.innerHTML = html;
+      document.querySelectorAll('#chatsTab .chat-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const propId = el.getAttribute('data-propid');
+          const sellerId = el.getAttribute('data-sellerid');
+          window.location.href = `chat.html?propertyId=${propId}&sellerId=${sellerId}`;
+        });
       });
-    });
+    } catch (err) {
+      console.error("Error loading chats:", err);
+      chatsDiv.innerHTML = '<p>Error loading chats. Make sure security rules have .indexOn "buyerId".</p>';
+    }
   }
 
-  // Saved searches
   function renderSavedSearches() {
     if (!savedSearches.length) {
       savedSearchesDiv.innerHTML = '<p>No saved searches. Use the form above.</p>';
@@ -537,7 +498,6 @@
     showSuccess('Search saved!');
   }
 
-  // Recently viewed
   function loadRecentlyViewed() {
     const viewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
     if (!viewed.length) {
@@ -573,15 +533,17 @@
       const tabId = btn.getAttribute('data-tab');
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.getElementById(`${tabId}Tab`).classList.add('active');
+      // Optionally refresh content when tab opens
+      if (tabId === 'chats') loadChats();
+      if (tabId === 'saved') loadSavedProperties();
+      if (tabId === 'recent') loadRecentlyViewed();
     });
   });
 
-  // Event listeners
   updateNameBtn.addEventListener('click', updateDisplayName);
   saveCurrentSearchBtn.addEventListener('click', saveCurrentSearch);
   document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'index.html'; });
 
-  // Auth
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = 'login.html?redirect=buyer-dashboard.html';
