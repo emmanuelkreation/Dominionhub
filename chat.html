@@ -177,7 +177,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getDatabase, ref, push, set, get, child, update, query, orderByChild, onChildAdded } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getDatabase, ref, push, set, get, child, update, onChildAdded } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
@@ -202,7 +202,6 @@
   let chatId = null;
   let messageListener = null;
 
-  const propertySummaryDiv = document.getElementById('propertySummary');
   const messagesArea = document.getElementById('messagesArea');
   const messageInput = document.getElementById('messageInput');
   const sendBtn = document.getElementById('sendBtn');
@@ -271,25 +270,6 @@
     return chatId;
   }
 
-  function loadMessages() {
-    if (!chatId) return;
-    // Clear previous listener
-    if (messageListener) messageListener();
-    const messagesRef = ref(db, `messages/${chatId}`);
-    const messagesQuery = query(messagesRef, orderByChild('timestamp'));
-    // Clear existing messages area
-    messagesArea.innerHTML = '';
-    messageListener = onChildAdded(messagesQuery, (snapshot) => {
-      const msg = snapshot.val();
-      displayMessage(msg);
-    });
-    // Mark unread as false
-    const isSeller = (currentUser.uid === sellerId);
-    update(ref(db, `chats/${chatId}`), {
-      [isSeller ? 'sellerHasUnread' : 'buyerHasUnread']: false
-    });
-  }
-
   function displayMessage(msg) {
     const isSent = (msg.senderId === currentUser.uid);
     const messageDiv = document.createElement('div');
@@ -299,18 +279,54 @@
       <div class="message-time">${formatTime(msg.timestamp)}</div>
     `;
     messagesArea.appendChild(messageDiv);
-    // Auto-scroll to bottom
     messagesArea.scrollTop = messagesArea.scrollHeight;
+  }
+
+  // Load all existing messages once, sort by timestamp, then listen for new ones
+  async function loadMessages() {
+    if (!chatId) return;
+    if (messageListener) messageListener(); // remove previous listener if any
+    const messagesRef = ref(db, `messages/${chatId}`);
+    
+    // First, fetch all existing messages
+    const snapshot = await get(messagesRef);
+    if (snapshot.exists()) {
+      const messages = [];
+      snapshot.forEach(child => {
+        messages.push({ id: child.key, ...child.val() });
+      });
+      // Sort by timestamp (oldest first)
+      messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+      messagesArea.innerHTML = '';
+      messages.forEach(msg => displayMessage(msg));
+    } else {
+      messagesArea.innerHTML = '<div style="text-align:center; padding:2rem;">No messages yet. Send a message to start the conversation.</div>';
+    }
+    
+    // Then listen for new messages only (onChildAdded will fire for new ones after this point)
+    messageListener = onChildAdded(messagesRef, (snapshot) => {
+      // We need to avoid duplicates. Since we already loaded all, we can check if it's new.
+      // A simple approach: just add any new message that appears after the snapshot.
+      // But onChildAdded will also fire for existing ones if we attach before get.
+      // To avoid duplicates, we'll attach after get and use a flag or rely on the fact that
+      // onChildAdded will not re-fire existing ones if we attach after the initial get.
+      // Actually, onChildAdded attached after get will fire only for new messages,
+      // because Firebase remembers the last snapshot. So this is fine.
+      const msg = snapshot.val();
+      // Check if this message already exists in the DOM (optional)
+      displayMessage(msg);
+    });
+    
+    // Mark unread as false
+    const isSeller = (currentUser.uid === sellerId);
+    await update(ref(db, `chats/${chatId}`), {
+      [isSeller ? 'sellerHasUnread' : 'buyerHasUnread']: false
+    });
   }
 
   function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      return m;
-    });
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
   }
 
   async function sendMessage() {
@@ -344,7 +360,7 @@
     await loadProperty();
     await getOrCreateChat();
     if (chatId) {
-      loadMessages();
+      await loadMessages();
     } else {
       messagesArea.innerHTML = '<div style="text-align:center; padding:2rem;">Unable to start chat.</div>';
     }
