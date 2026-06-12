@@ -51,30 +51,87 @@
       font-weight: 600;
       cursor: pointer;
     }
-    .dashboard-title { margin: 2rem 0 1rem; text-align: center; }
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 2rem;
-      margin: 2rem 0;
+    .dashboard-header {
+      margin: 2rem 0 1rem;
     }
-    .card {
+    .welcome-card {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      border-radius: 1.5rem;
+      padding: 1.8rem;
+      color: white;
+      margin-bottom: 2rem;
+    }
+    .welcome-card h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 1rem;
+      padding: 1.2rem;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #1e3a8a;
+    }
+    .stat-label {
+      color: #6b7280;
+      font-size: 0.85rem;
+      margin-top: 0.3rem;
+    }
+    .profile-card {
       background: white;
       border-radius: 1rem;
       padding: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      align-items: center;
+      justify-content: space-between;
     }
-    .card h3 {
-      font-size: 1.3rem;
-      margin-bottom: 1rem;
-      border-left: 4px solid #d97706;
-      padding-left: 0.8rem;
+    .profile-info h3 { font-size: 1.2rem; margin-bottom: 0.3rem; }
+    .profile-info p { color: #6b7280; font-size: 0.85rem; }
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 1.5rem;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #6b7280;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      color: #1e3a8a;
+      border-bottom: 2px solid #d97706;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
     }
     .property-item, .chat-item, .search-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.8rem 0;
+      padding: 0.8rem;
       border-bottom: 1px solid #e2e8f0;
     }
     .property-info, .chat-info, .search-info { flex: 1; cursor: pointer; }
@@ -106,6 +163,8 @@
       border: 1px solid #e2e8f0;
       border-radius: 0.5rem;
     }
+    .success { background: #dcfce7; color: #16a34a; padding: 0.5rem; border-radius: 0.5rem; margin: 1rem 0; display: none; }
+    .error { background: #fee2e2; color: #dc2626; padding: 0.5rem; border-radius: 0.5rem; margin: 1rem 0; display: none; }
     footer {
       background: #0f172a;
       color: #cbd5e1;
@@ -113,9 +172,9 @@
       padding: 1.5rem;
       margin-top: 2rem;
     }
-    .success { background: #dcfce7; color: #16a34a; padding: 0.5rem; border-radius: 0.5rem; margin: 1rem 0; display: none; }
-    .error { background: #fee2e2; color: #dc2626; padding: 0.5rem; border-radius: 0.5rem; margin: 1rem 0; display: none; }
-    @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) {
+      .profile-card { flex-direction: column; align-items: flex-start; }
+    }
   </style>
 </head>
 <body>
@@ -132,68 +191,89 @@
 </nav>
 
 <div class="container">
-  <div class="dashboard-title">
-    <h1>Buyer Dashboard</h1>
-    <p>Manage your saved properties, chats, and searches</p>
-  </div>
-
   <div id="successMsg" class="success"></div>
   <div id="errorMsg" class="error"></div>
 
-  <div class="dashboard-grid">
-    <!-- Saved Properties -->
-    <div class="card">
-      <h3><i class="fas fa-heart" style="color:#dc2626;"></i> Saved Properties</h3>
+  <div class="dashboard-header">
+    <div class="welcome-card" id="welcomeCard">
+      <h1>Welcome back, <span id="userName">Buyer</span>!</h1>
+      <p>Discover your dream home, manage saved properties, and chat with sellers.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="savedCount">0</div>
+        <div class="stat-label">Saved Properties</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="chatsCount">0</div>
+        <div class="stat-label">Active Chats</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="searchesCount">0</div>
+        <div class="stat-label">Saved Searches</div>
+      </div>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="profile-card">
+      <div class="profile-info">
+        <h3><i class="fas fa-user"></i> <span id="profileName"></span></h3>
+        <p><i class="fas fa-envelope"></i> <span id="profileEmail"></span></p>
+        <p><i class="fas fa-calendar-alt"></i> Member since: <span id="memberSince"></span></p>
+      </div>
+      <div>
+        <input type="text" id="editNameInput" placeholder="New display name" style="padding:0.5rem; border-radius:0.5rem; border:1px solid #e2e8f0; margin-right:0.5rem;">
+        <button id="updateNameBtn" class="btn-primary">Update Name</button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="saved">Saved Properties</button>
+      <button class="tab-btn" data-tab="chats">Active Chats</button>
+      <button class="tab-btn" data-tab="searches">Saved Searches</button>
+      <button class="tab-btn" data-tab="recent">Recently Viewed</button>
+    </div>
+
+    <!-- Saved Properties Tab -->
+    <div id="savedTab" class="tab-content active">
       <div id="savedPropertiesList">Loading...</div>
     </div>
 
-    <!-- Active Chats -->
-    <div class="card">
-      <h3><i class="fas fa-comments"></i> Active Chats</h3>
+    <!-- Chats Tab -->
+    <div id="chatsTab" class="tab-content">
       <div id="chatsList">Loading...</div>
     </div>
 
-    <!-- Saved Searches -->
-    <div class="card">
-      <h3><i class="fas fa-search"></i> Saved Searches</h3>
+    <!-- Saved Searches Tab -->
+    <div id="searchesTab" class="tab-content">
       <div id="savedSearchesList">Loading...</div>
       <div class="save-search-form">
         <input type="text" id="searchName" placeholder="e.g., 3-bed under 500k">
         <button id="saveCurrentSearchBtn" class="btn-primary">Save Current Filters</button>
       </div>
-      <p style="font-size:0.7rem; margin-top:0.5rem; color:#6b7280;">Saves the filters you last used on the listings page (location, price, beds, etc.)</p>
+      <p style="font-size:0.7rem; margin-top:0.5rem; color:#6b7280;">Saves the filters you last used on the listings page.</p>
     </div>
 
-    <!-- Recently Viewed -->
-    <div class="card">
-      <h3><i class="fas fa-clock"></i> Recently Viewed</h3>
+    <!-- Recently Viewed Tab -->
+    <div id="recentTab" class="tab-content">
       <div id="recentlyViewedList">Loading...</div>
-    </div>
-
-    <!-- Account Settings -->
-    <div class="card">
-      <h3><i class="fas fa-user-cog"></i> Account Settings</h3>
-      <div style="margin-bottom: 1rem;">
-        <label>Display Name</label>
-        <input type="text" id="displayName" style="width:100%; padding:0.5rem; margin-top:0.3rem; border-radius:0.5rem; border:1px solid #e2e8f0;">
-        <button id="updateProfileBtn" class="btn-primary" style="margin-top:0.5rem;">Update Name</button>
-      </div>
-      <div>
-        <button id="changePasswordBtn" class="btn-outline">Change Password</button>
-        <button id="deleteAccountBtn" class="btn-outline" style="border-color:#dc2626; color:#dc2626; margin-left:0.5rem;">Delete Account</button>
-      </div>
     </div>
   </div>
 </div>
 
 <footer>
-  <p>&copy; 2025 Dominion Home Hub – Buyer Dashboard</p>
+  <div class="container">
+    <p>&copy; 2025 Dominion Home Hub – Buyer Dashboard</p>
+  </div>
 </footer>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut, updateProfile, sendPasswordResetEmail, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getDatabase, ref, get, set, update, remove, child, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getDatabase, ref, get, update, child, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
@@ -211,6 +291,7 @@
   const db = getDatabase(app);
 
   let currentUser = null;
+  let userData = null;
   let savedPropertiesIds = [];
   let savedSearches = [];
 
@@ -219,33 +300,44 @@
   const chatsDiv = document.getElementById('chatsList');
   const savedSearchesDiv = document.getElementById('savedSearchesList');
   const recentlyViewedDiv = document.getElementById('recentlyViewedList');
-  const displayNameInput = document.getElementById('displayName');
-  const updateProfileBtn = document.getElementById('updateProfileBtn');
-  const changePasswordBtn = document.getElementById('changePasswordBtn');
-  const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+  const profileNameSpan = document.getElementById('profileName');
+  const profileEmailSpan = document.getElementById('profileEmail');
+  const memberSinceSpan = document.getElementById('memberSince');
+  const userNameSpan = document.getElementById('userName');
+  const editNameInput = document.getElementById('editNameInput');
+  const updateNameBtn = document.getElementById('updateNameBtn');
   const saveCurrentSearchBtn = document.getElementById('saveCurrentSearchBtn');
   const searchNameInput = document.getElementById('searchName');
   const successDiv = document.getElementById('successMsg');
   const errorDiv = document.getElementById('errorMsg');
+  const savedCountSpan = document.getElementById('savedCount');
+  const chatsCountSpan = document.getElementById('chatsCount');
+  const searchesCountSpan = document.getElementById('searchesCount');
 
   function showSuccess(msg) { successDiv.textContent = msg; successDiv.style.display = 'block'; setTimeout(() => successDiv.style.display = 'none', 4000); }
   function showError(msg) { errorDiv.textContent = msg; errorDiv.style.display = 'block'; setTimeout(() => errorDiv.style.display = 'none', 5000); }
 
-  // Load user data from Realtime Database
+  // Format date
+  function formatDate(timestamp) {
+    if (!timestamp) return 'Unknown';
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+  }
+
+  // Load user profile and data
   async function loadUserData() {
     if (!currentUser) return;
     const userRef = ref(db, `users/${currentUser.uid}`);
     const snapshot = await get(userRef);
     if (snapshot.exists()) {
-      const data = snapshot.val();
-      savedPropertiesIds = data.savedProperties || [];
-      savedSearches = data.savedSearches || [];
-      displayNameInput.value = data.displayName || currentUser.displayName || '';
+      userData = snapshot.val();
+      savedPropertiesIds = userData.savedProperties || [];
+      savedSearches = userData.savedSearches || [];
     } else {
-      // Create user document if not exists
-      await set(userRef, {
+      // Create user document if missing
+      await update(ref(db, `users/${currentUser.uid}`), {
         email: currentUser.email,
-        displayName: currentUser.displayName || '',
+        displayName: currentUser.displayName || 'Buyer',
         role: 'buyer',
         createdAt: new Date().toISOString(),
         savedProperties: [],
@@ -254,27 +346,49 @@
       savedPropertiesIds = [];
       savedSearches = [];
     }
+    // Update UI
+    const displayName = userData?.displayName || currentUser.displayName || 'Buyer';
+    profileNameSpan.textContent = displayName;
+    userNameSpan.textContent = displayName.split(' ')[0];
+    profileEmailSpan.textContent = currentUser.email;
+    const memberDate = userData?.createdAt ? new Date(userData.createdAt) : new Date();
+    memberSinceSpan.textContent = formatDate(memberDate);
+    editNameInput.value = displayName;
+    // Update stats
+    savedCountSpan.textContent = savedPropertiesIds.length;
+    searchesCountSpan.textContent = savedSearches.length;
     await loadSavedProperties();
-    renderSavedSearches();
     loadChats();
+    renderSavedSearches();
     loadRecentlyViewed();
   }
 
-  // Fetch property details for saved IDs
+  // Update display name
+  async function updateDisplayName() {
+    const newName = editNameInput.value.trim();
+    if (!newName) { showError('Name cannot be empty'); return; }
+    try {
+      await updateProfile(auth.currentUser, { displayName: newName });
+      await update(ref(db, `users/${currentUser.uid}`), { displayName: newName });
+      profileNameSpan.textContent = newName;
+      userNameSpan.textContent = newName.split(' ')[0];
+      showSuccess('Display name updated');
+    } catch (err) { showError(err.message); }
+  }
+
+  // Saved properties
   async function loadSavedProperties() {
     if (!savedPropertiesIds.length) {
-      savedPropsDiv.innerHTML = '<p>No saved properties yet. Click the ❤️ on property cards to save.</p>';
+      savedPropsDiv.innerHTML = '<p>No saved properties. Click ❤️ on property cards to save.</p>';
       return;
     }
     savedPropsDiv.innerHTML = '<p>Loading...</p>';
     const properties = [];
     for (const id of savedPropertiesIds) {
       const snapshot = await get(child(ref(db), `properties/${id}`));
-      if (snapshot.exists()) {
-        properties.push({ id, ...snapshot.val() });
-      }
+      if (snapshot.exists()) properties.push({ id, ...snapshot.val() });
     }
-    if (properties.length === 0) {
+    if (!properties.length) {
       savedPropsDiv.innerHTML = '<p>No saved properties found.</p>';
       return;
     }
@@ -295,12 +409,11 @@
       `;
     });
     savedPropsDiv.innerHTML = html;
-    // Attach click handlers for property info (go to detail) and remove button
-    document.querySelectorAll('.property-info').forEach(el => {
+    document.querySelectorAll('#savedTab .property-info').forEach(el => {
       const id = el.closest('.property-item').getAttribute('data-id');
       el.addEventListener('click', () => window.location.href = `property-detail.html?id=${id}`);
     });
-    document.querySelectorAll('.remove-save').forEach(btn => {
+    document.querySelectorAll('#savedTab .remove-save').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const propId = btn.getAttribute('data-id');
@@ -310,47 +423,46 @@
   }
 
   async function removeSavedProperty(propertyId) {
-    if (!currentUser) return;
     const newList = savedPropertiesIds.filter(id => id !== propertyId);
     await update(ref(db, `users/${currentUser.uid}`), { savedProperties: newList });
     savedPropertiesIds = newList;
-    showSuccess('Property removed from saved list');
-    loadSavedProperties(); // refresh
+    savedCountSpan.textContent = savedPropertiesIds.length;
+    showSuccess('Property removed');
+    loadSavedProperties();
   }
 
-  // Load chats where buyer is current user
+  // Chats
   async function loadChats() {
-    const chatsRef = ref(db, 'chats');
-    const q = query(chatsRef, orderByChild('buyerId'), equalTo(currentUser.uid));
+    if (!currentUser) return;
+    const q = query(ref(db, 'chats'), orderByChild('buyerId'), equalTo(currentUser.uid));
     const snapshot = await get(q);
     if (!snapshot.exists()) {
       chatsDiv.innerHTML = '<p>No active chats. Contact sellers from property pages.</p>';
+      chatsCountSpan.textContent = '0';
       return;
     }
     const chats = [];
-    snapshot.forEach(child => {
-      chats.push({ id: child.key, ...child.val() });
-    });
-    // Also get property details for each chat
+    snapshot.forEach(child => chats.push({ id: child.key, ...child.val() }));
+    chatsCountSpan.textContent = chats.length;
     let html = '';
     for (const chat of chats) {
       const propSnap = await get(child(ref(db), `properties/${chat.propertyId}`));
-      if (propSnap.exists()) {
-        const prop = propSnap.val();
-        const unread = chat.buyerHasUnread ? '<span class="unread-badge">New</span>' : '';
-        html += `
-          <div class="chat-item" data-chatid="${chat.id}" data-propid="${chat.propertyId}" data-sellerid="${chat.sellerId}">
-            <div class="chat-info">
-              <strong>${prop.location.split(',')[0]}</strong>
-              <p>Last message: ${chat.lastMessage ? chat.lastMessage.substring(0, 40) : 'No messages yet'}</p>
-            </div>
-            ${unread}
+      const sellerSnap = await get(child(ref(db), `users/${chat.sellerId}`));
+      const sellerName = sellerSnap.exists() ? (sellerSnap.val().displayName || 'Seller') : 'Seller';
+      const propTitle = propSnap.exists() ? propSnap.val().location.split(',')[0] : 'Property';
+      const unread = chat.buyerHasUnread ? '<span class="unread-badge">New</span>' : '';
+      html += `
+        <div class="chat-item" data-chatid="${chat.id}" data-propid="${chat.propertyId}" data-sellerid="${chat.sellerId}">
+          <div class="chat-info">
+            <strong>${sellerName}</strong> on ${propTitle}
+            <p>${chat.lastMessage ? chat.lastMessage.substring(0, 40) : 'No messages yet'}</p>
           </div>
-        `;
-      }
+          ${unread}
+        </div>
+      `;
     }
-    chatsDiv.innerHTML = html || '<p>No active chats.</p>';
-    document.querySelectorAll('.chat-item').forEach(el => {
+    chatsDiv.innerHTML = html || '<p>No chats yet.</p>';
+    document.querySelectorAll('#chatsTab .chat-item').forEach(el => {
       el.addEventListener('click', () => {
         const propId = el.getAttribute('data-propid');
         const sellerId = el.getAttribute('data-sellerid');
@@ -359,7 +471,7 @@
     });
   }
 
-  // Saved Searches
+  // Saved searches
   function renderSavedSearches() {
     if (!savedSearches.length) {
       savedSearchesDiv.innerHTML = '<p>No saved searches. Use the form above.</p>';
@@ -378,11 +490,10 @@
       `;
     });
     savedSearchesDiv.innerHTML = html;
-    document.querySelectorAll('.search-info').forEach(el => {
+    document.querySelectorAll('#searchesTab .search-info').forEach(el => {
       const idx = el.closest('.search-item').getAttribute('data-index');
       el.addEventListener('click', () => {
         const search = savedSearches[idx];
-        // Redirect to listings page with filters
         const params = new URLSearchParams();
         if (search.filters.location) params.set('location', search.filters.location);
         if (search.filters.minPrice) params.set('minPrice', search.filters.minPrice);
@@ -393,7 +504,7 @@
         window.location.href = `listings.html?${params.toString()}`;
       });
     });
-    document.querySelectorAll('.delete-search').forEach(btn => {
+    document.querySelectorAll('#searchesTab .delete-search').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const idx = parseInt(btn.getAttribute('data-index'));
@@ -407,32 +518,26 @@
     newSearches.splice(index, 1);
     await update(ref(db, `users/${currentUser.uid}`), { savedSearches: newSearches });
     savedSearches = newSearches;
+    searchesCountSpan.textContent = savedSearches.length;
     renderSavedSearches();
     showSuccess('Search removed');
   }
 
-  // Save current search (from localStorage or default)
   async function saveCurrentSearch() {
     const name = searchNameInput.value.trim();
     if (!name) { showError('Please enter a name for this search'); return; }
-    // Load filters from localStorage (set by listings page)
-    let filters = {};
-    const stored = localStorage.getItem('lastSearchFilters');
-    if (stored) {
-      filters = JSON.parse(stored);
-    } else {
-      filters = { location: '', minPrice: '', maxPrice: '', bedrooms: '', bathrooms: '', propertyType: '' };
-    }
+    const filters = JSON.parse(localStorage.getItem('lastSearchFilters') || '{}');
     const newSearch = { name, filters, createdAt: new Date().toISOString() };
     const updated = [...savedSearches, newSearch];
     await update(ref(db, `users/${currentUser.uid}`), { savedSearches: updated });
     savedSearches = updated;
+    searchesCountSpan.textContent = savedSearches.length;
     renderSavedSearches();
     searchNameInput.value = '';
     showSuccess('Search saved!');
   }
 
-  // Recently Viewed (localStorage)
+  // Recently viewed
   function loadRecentlyViewed() {
     const viewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
     if (!viewed.length) {
@@ -444,7 +549,7 @@
       html += `
         <div class="property-item" data-id="${prop.id}">
           <div class="property-info" style="display:flex; gap:0.5rem; align-items:center;">
-            <img src="${prop.image}" width="50" height="50" style="border-radius:8px; object-fit:cover;">
+            <img src="${prop.image || 'https://via.placeholder.com/50'}" width="50" height="50" style="border-radius:8px; object-fit:cover;">
             <div>
               <strong>${prop.location}</strong>
               <p>$${prop.price.toLocaleString()}</p>
@@ -454,50 +559,29 @@
       `;
     });
     recentlyViewedDiv.innerHTML = html;
-    document.querySelectorAll('#recentlyViewedList .property-info').forEach(el => {
+    document.querySelectorAll('#recentTab .property-info').forEach(el => {
       const id = el.closest('.property-item').getAttribute('data-id');
       el.addEventListener('click', () => window.location.href = `property-detail.html?id=${id}`);
     });
   }
 
-  // Account settings
-  async function updateDisplayName() {
-    const newName = displayNameInput.value.trim();
-    if (!newName) { showError('Name cannot be empty'); return; }
-    try {
-      await updateProfile(auth.currentUser, { displayName: newName });
-      await update(ref(db, `users/${currentUser.uid}`), { displayName: newName });
-      showSuccess('Display name updated');
-    } catch (err) { showError(err.message); }
-  }
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tabId = btn.getAttribute('data-tab');
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(`${tabId}Tab`).classList.add('active');
+    });
+  });
 
-  async function changePassword() {
-    const email = currentUser.email;
-    try {
-      await sendPasswordResetEmail(auth, email);
-      showSuccess('Password reset email sent. Check your inbox.');
-    } catch (err) { showError(err.message); }
-  }
+  // Event listeners
+  updateNameBtn.addEventListener('click', updateDisplayName);
+  saveCurrentSearchBtn.addEventListener('click', saveCurrentSearch);
+  document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'index.html'; });
 
-  async function deleteAccount() {
-    if (!confirm('WARNING: This will permanently delete your account and all data. Type "DELETE" to confirm.')) return;
-    const promptText = prompt('Type DELETE to confirm');
-    if (promptText !== 'DELETE') { showError('Account deletion cancelled'); return; }
-    try {
-      // Re-authenticate (simple prompt for password)
-      const password = prompt('Enter your password to confirm deletion:');
-      if (!password) { showError('Password required'); return; }
-      const credential = EmailAuthProvider.credential(currentUser.email, password);
-      await reauthenticateWithCredential(currentUser, credential);
-      // Delete user data from Realtime Database (properties? only user node)
-      await remove(ref(db, `users/${currentUser.uid}`));
-      // Delete any chats? optional. Then delete auth user.
-      await deleteUser(currentUser);
-      window.location.href = 'index.html';
-    } catch (err) { showError('Deletion failed: ' + err.message); }
-  }
-
-  // Auth check
+  // Auth
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = 'login.html?redirect=buyer-dashboard.html';
@@ -506,13 +590,6 @@
     currentUser = user;
     await loadUserData();
   });
-
-  // Event listeners
-  updateProfileBtn.addEventListener('click', updateDisplayName);
-  changePasswordBtn.addEventListener('click', changePassword);
-  deleteAccountBtn.addEventListener('click', deleteAccount);
-  saveCurrentSearchBtn.addEventListener('click', saveCurrentSearch);
-  document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'index.html'; });
 </script>
 </body>
 </html>
