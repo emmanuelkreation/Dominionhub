@@ -94,7 +94,6 @@
     }
     .edit-btn { background: #d97706; color: white; }
     .delete-btn { background: #dc2626; color: white; }
-    /* Chat styles */
     .chat-list {
       max-height: 300px;
       overflow-y: auto;
@@ -216,7 +215,7 @@
     <button class="tab-btn" data-tab="offers">Offers Received</button>
   </div>
 
-  <!-- Properties Tab (CRUD) -->
+  <!-- Properties Tab -->
   <div id="propertiesTab" class="tab-content active">
     <div class="card">
       <h2 id="formTitle">Add New Property</h2>
@@ -368,21 +367,24 @@
     updateImagePreview(currentImageUrls);
   });
 
-  // Property CRUD
+  // ---------- PROPERTY CRUD ----------
   async function loadSellerProperties() {
     if (!currentUser) return;
+    console.log("📋 Loading seller properties for:", currentUser.uid);
     try {
       const q = query(ref(db, 'properties'), orderByChild('sellerId'), equalTo(currentUser.uid));
       const snapshot = await get(q);
       if (snapshot.exists()) {
         const properties = [];
         snapshot.forEach(child => properties.push({ id: child.key, ...child.val() }));
+        console.log(`✅ Found ${properties.length} properties`);
         renderPropertiesTable(properties);
       } else {
+        console.log("ℹ️ No properties found");
         propertiesListDiv.innerHTML = '<p>No properties yet. Add your first property.</p>';
       }
     } catch (err) {
-      console.error(err);
+      console.error("❌ Error loading properties:", err);
       propertiesListDiv.innerHTML = '<p>Error loading properties.</p>';
     }
   }
@@ -504,6 +506,7 @@
     cancelEditBtn.style.display = 'none';
   }
 
+  // ---------- SELLER PROFILE ----------
   async function loadSellerProfile() {
     if (!currentUser) return;
     const snapshot = await get(child(ref(db), `users/${currentUser.uid}`));
@@ -535,16 +538,22 @@
 
   // ---------- CHAT SYSTEM ----------
   async function loadChats() {
-    if (!currentUser) return;
+    if (!currentUser) {
+      console.warn("loadChats: No currentUser");
+      return;
+    }
+    console.log("💬 Loading chats for seller:", currentUser.uid);
     try {
       const q = query(ref(db, 'chats'), orderByChild('sellerId'), equalTo(currentUser.uid));
       const snapshot = await get(q);
       if (!snapshot.exists()) {
+        console.log("ℹ️ No chats found");
         chatListContainer.innerHTML = '<p>No messages yet. Buyers will contact you from property pages.</p>';
         return;
       }
       let chats = [];
       snapshot.forEach(child => chats.push({ id: child.key, ...child.val() }));
+      console.log(`✅ Found ${chats.length} chats`);
       let html = '';
       for (const chat of chats) {
         const buyerSnap = await get(child(ref(db), `users/${chat.buyerId}`));
@@ -574,8 +583,8 @@
         });
       });
     } catch (err) {
-      console.error(err);
-      chatListContainer.innerHTML = '<p>Error loading chats.</p>';
+      console.error("❌ Error loading chats:", err);
+      chatListContainer.innerHTML = '<p>Error loading chats. Check console.</p>';
     }
   }
 
@@ -631,77 +640,88 @@
 
   // ---------- OFFERS ----------
   async function loadOffers() {
-    if (!currentUser) return;
-    const offersRef = ref(db, 'offers');
-    const q = query(offersRef, orderByChild('sellerId'), equalTo(currentUser.uid));
-    const snapshot = await get(q);
-    if (!snapshot.exists()) {
-      document.getElementById('offersList').innerHTML = '<p>No offers received yet.</p>';
+    if (!currentUser) {
+      console.warn("loadOffers: No currentUser");
       return;
     }
-    let offers = [];
-    snapshot.forEach(child => offers.push({ id: child.key, ...child.val() }));
-    let html = '';
-    for (const offer of offers) {
-      const propSnap = await get(child(ref(db), `properties/${offer.propertyId}`));
-      const buyerSnap = await get(child(ref(db), `users/${offer.buyerId}`));
-      const propTitle = propSnap.exists() ? propSnap.val().location.split(',')[0] : 'Property';
-      const buyerName = buyerSnap.exists() ? buyerSnap.val().displayName || 'Buyer' : 'Buyer';
-      html += `
-        <div class="offer-item" data-offerid="${offer.id}">
-          <div><strong>${buyerName}</strong> offered <strong>$${offer.amount.toLocaleString()}</strong> on <strong>${propTitle}</strong></div>
-          <div>Status: <span id="status-${offer.id}">${offer.status}</span></div>
-          <div style="margin-top:0.5rem;">
-      `;
-      if (offer.status === 'pending') {
-        html += `
-          <button class="accept-offer btn-primary" data-id="${offer.id}">Accept</button>
-          <button class="reject-offer btn-outline" data-id="${offer.id}">Reject</button>
-          <input type="number" id="counter-${offer.id}" placeholder="Counter amount" style="width:120px; margin-left:0.5rem; padding:0.3rem;">
-          <button class="counter-offer btn-outline" data-id="${offer.id}">Counter</button>
-        `;
-      } else if (offer.status === 'countered') {
-        html += `<span>You countered: $${offer.counterAmount.toLocaleString()}. Waiting for buyer response.</span>`;
-      } else if (offer.status === 'accepted') {
-        html += `<span class="success-text">✅ Offer accepted! Contact buyer to proceed.</span>`;
-      } else if (offer.status === 'rejected') {
-        html += `<span class="error-text">❌ Offer rejected</span>`;
+    console.log("💰 Loading offers for seller:", currentUser.uid);
+    try {
+      const offersRef = ref(db, 'offers');
+      const q = query(offersRef, orderByChild('sellerId'), equalTo(currentUser.uid));
+      const snapshot = await get(q);
+      if (!snapshot.exists()) {
+        console.log("ℹ️ No offers found");
+        document.getElementById('offersList').innerHTML = '<p>No offers received yet.</p>';
+        return;
       }
-      html += `</div></div>`;
-    }
-    document.getElementById('offersList').innerHTML = html;
+      let offers = [];
+      snapshot.forEach(child => offers.push({ id: child.key, ...child.val() }));
+      console.log(`✅ Found ${offers.length} offers`);
+      let html = '';
+      for (const offer of offers) {
+        const propSnap = await get(child(ref(db), `properties/${offer.propertyId}`));
+        const buyerSnap = await get(child(ref(db), `users/${offer.buyerId}`));
+        const propTitle = propSnap.exists() ? propSnap.val().location.split(',')[0] : 'Property';
+        const buyerName = buyerSnap.exists() ? buyerSnap.val().displayName || 'Buyer' : 'Buyer';
+        html += `
+          <div class="offer-item" data-offerid="${offer.id}">
+            <div><strong>${buyerName}</strong> offered <strong>$${offer.amount.toLocaleString()}</strong> on <strong>${propTitle}</strong></div>
+            <div>Status: <span id="status-${offer.id}">${offer.status}</span></div>
+            <div style="margin-top:0.5rem;">
+        `;
+        if (offer.status === 'pending') {
+          html += `
+            <button class="accept-offer btn-primary" data-id="${offer.id}">Accept</button>
+            <button class="reject-offer btn-outline" data-id="${offer.id}">Reject</button>
+            <input type="number" id="counter-${offer.id}" placeholder="Counter amount" style="width:120px; margin-left:0.5rem; padding:0.3rem;">
+            <button class="counter-offer btn-outline" data-id="${offer.id}">Counter</button>
+          `;
+        } else if (offer.status === 'countered') {
+          html += `<span>You countered: $${offer.counterAmount.toLocaleString()}. Waiting for buyer response.</span>`;
+        } else if (offer.status === 'accepted') {
+          html += `<span class="success-text">✅ Offer accepted! Contact buyer to proceed.</span>`;
+        } else if (offer.status === 'rejected') {
+          html += `<span class="error-text">❌ Offer rejected</span>`;
+        }
+        html += `</div></div>`;
+      }
+      document.getElementById('offersList').innerHTML = html;
 
-    // Attach event listeners
-    document.querySelectorAll('.accept-offer').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const offerId = btn.getAttribute('data-id');
-        await update(ref(db, `offers/${offerId}`), { status: 'accepted', updatedAt: Date.now() });
-        loadOffers();
-      });
-    });
-    document.querySelectorAll('.reject-offer').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const offerId = btn.getAttribute('data-id');
-        await update(ref(db, `offers/${offerId}`), { status: 'rejected', updatedAt: Date.now() });
-        loadOffers();
-      });
-    });
-    document.querySelectorAll('.counter-offer').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const offerId = btn.getAttribute('data-id');
-        const counterAmount = parseFloat(document.getElementById(`counter-${offerId}`).value);
-        if (isNaN(counterAmount) || counterAmount <= 0) { alert('Enter valid counter amount'); return; }
-        await update(ref(db, `offers/${offerId}`), {
-          status: 'countered',
-          counterAmount: counterAmount,
-          updatedAt: Date.now()
+      // Attach event listeners
+      document.querySelectorAll('.accept-offer').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const offerId = btn.getAttribute('data-id');
+          await update(ref(db, `offers/${offerId}`), { status: 'accepted', updatedAt: Date.now() });
+          loadOffers();
         });
-        loadOffers();
       });
-    });
+      document.querySelectorAll('.reject-offer').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const offerId = btn.getAttribute('data-id');
+          await update(ref(db, `offers/${offerId}`), { status: 'rejected', updatedAt: Date.now() });
+          loadOffers();
+        });
+      });
+      document.querySelectorAll('.counter-offer').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const offerId = btn.getAttribute('data-id');
+          const counterAmount = parseFloat(document.getElementById(`counter-${offerId}`).value);
+          if (isNaN(counterAmount) || counterAmount <= 0) { alert('Enter valid counter amount'); return; }
+          await update(ref(db, `offers/${offerId}`), {
+            status: 'countered',
+            counterAmount: counterAmount,
+            updatedAt: Date.now()
+          });
+          loadOffers();
+        });
+      });
+    } catch (err) {
+      console.error("❌ Error loading offers:", err);
+      document.getElementById('offersList').innerHTML = '<p>Error loading offers. Check console.</p>';
+    }
   }
 
-  // Tab switching
+  // ---------- TAB SWITCHING ----------
   function switchTab(tabId) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
@@ -718,16 +738,20 @@
     });
   });
 
-  // Auto refresh for chats and offers
+  // ---------- AUTO REFRESH ----------
   function startRefresh() {
     if (refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(() => {
-      if (document.querySelector('.tab-btn.active').getAttribute('data-tab') === 'chats') loadChats();
-      if (document.querySelector('.tab-btn.active').getAttribute('data-tab') === 'offers') loadOffers();
+      const activeTab = document.querySelector('.tab-btn.active');
+      if (activeTab) {
+        const tabId = activeTab.getAttribute('data-tab');
+        if (tabId === 'chats') loadChats();
+        if (tabId === 'offers') loadOffers();
+      }
     }, 10000);
   }
 
-  // Event listeners
+  // ---------- EVENT LISTENERS ----------
   saveBtn.addEventListener('click', saveProperty);
   cancelEditBtn.addEventListener('click', resetForm);
   updateBrandBtn.addEventListener('click', updateSellerBrandName);
@@ -735,13 +759,14 @@
   chatMessageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
   document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'index.html'; });
 
-  // Auth
+  // ---------- AUTH ----------
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = 'login.html?redirect=dashboard.html';
       return;
     }
     currentUser = user;
+    console.log("🔐 Seller authenticated:", currentUser.uid);
     const roleSnap = await get(child(ref(db), `users/${user.uid}/role`));
     if (!roleSnap.exists() || roleSnap.val() !== 'seller') {
       await signOut(auth);
@@ -749,6 +774,7 @@
       window.location.href = 'login.html';
       return;
     }
+    console.log("✅ Seller role confirmed");
     await loadSellerProfile();
     loadSellerProperties();
     loadChats();
