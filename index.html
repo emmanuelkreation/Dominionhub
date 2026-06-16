@@ -467,7 +467,12 @@
               <span><i class="fas fa-bath"></i> ${prop.bathrooms} baths</span>
               <span><i class="fas fa-ruler-combined"></i> ${prop.area || 0} sqft</span>
             </div>
-            <div class="seller-name"><i class="fas fa-user-circle"></i> ${prop.sellerName || 'Property Owner'}</div>
+           <div class="seller-name">
+  <i class="fas fa-user-circle"></i>
+  <a href="seller-profile.html?sellerId=${prop.sellerId}" style="color: #d97706; text-decoration: none; cursor: pointer;">
+    ${prop.sellerName || 'Property Owner'}
+  </a>
+</div>
             <span class="badge">${prop.propertyType || 'Property'}</span>
           </div>
         </div>
