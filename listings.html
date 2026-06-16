@@ -155,6 +155,22 @@
     .price { font-size: 1.4rem; font-weight: 800; color: #1e3a8a; }
     .address { color: #6b7280; font-size: 0.85rem; margin: 0.3rem 0; display: flex; align-items: center; gap: 0.3rem; }
     .features { display: flex; gap: 1rem; font-size: 0.8rem; margin: 0.5rem 0; }
+    .seller-name {
+      font-size: 0.75rem;
+      color: #d97706;
+      margin-top: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .seller-name a {
+      color: #d97706;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .seller-name a:hover {
+      text-decoration: underline;
+    }
     .badge { display: inline-block; background: #eef2ff; padding: 0.2rem 0.6rem; border-radius: 30px; font-size: 0.7rem; font-weight: 600; color: #1e3a8a; }
     .list-view .property-card {
       display: flex;
@@ -290,15 +306,15 @@
   import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
   const firebaseConfig = {
-  apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
-  authDomain: "dominion-1e85f.firebaseapp.com",
-  databaseURL: "https://dominion-1e85f-default-rtdb.firebaseio.com",
-  projectId: "dominion-1e85f",
-  storageBucket: "dominion-1e85f.firebasestorage.app",
-  messagingSenderId: "1036601319820",
-  appId: "1:1036601319820:web:3395f663c3e05326ed76a9",
-  measurementId: "G-BZLJPTFMZ1"
-};
+    apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
+    authDomain: "dominion-1e85f.firebaseapp.com",
+    databaseURL: "https://dominion-1e85f-default-rtdb.firebaseio.com",
+    projectId: "dominion-1e85f",
+    storageBucket: "dominion-1e85f.firebasestorage.app",
+    messagingSenderId: "1036601319820",
+    appId: "1:1036601319820:web:3395f663c3e05326ed76a9",
+    measurementId: "G-BZLJPTFMZ1"
+  };
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
@@ -321,7 +337,7 @@
   const propertyTypeSelect = document.getElementById('propertyType');
 
   // State
-  let allProperties = [];      // raw from DB
+  let allProperties = [];
   let filteredProperties = [];
   let currentPage = 1;
   const pageSize = 12;
@@ -331,16 +347,13 @@
   let currentListingType = 'buy';
   let urlLocation = '';
 
-  // Helper: get URL params
   function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
     currentListingType = params.get('type') || 'buy';
     urlLocation = params.get('location') || '';
     filterLocationInput.value = urlLocation;
-    // Update active tab in navbar? Not needed.
   }
 
-  // Helper: format price
   function formatPrice(price) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price);
   }
@@ -351,7 +364,6 @@
     return 'For Lease';
   }
 
-  // Load properties from Realtime Database for the given listing type
   async function loadProperties() {
     try {
       const propertiesRef = ref(db, 'properties');
@@ -374,31 +386,20 @@
     }
   }
 
-  // Apply filters client-side (since we already have all properties of the type)
   function applyFilters() {
     let results = [...allProperties];
     const locationFilter = filterLocationInput.value.trim().toLowerCase();
-    if (locationFilter) {
-      results = results.filter(p => p.location.toLowerCase().includes(locationFilter));
-    }
+    if (locationFilter) results = results.filter(p => p.location.toLowerCase().includes(locationFilter));
     const minPrice = parseFloat(minPriceInput.value);
     const maxPrice = parseFloat(maxPriceInput.value);
     if (!isNaN(minPrice)) results = results.filter(p => p.price >= minPrice);
     if (!isNaN(maxPrice)) results = results.filter(p => p.price <= maxPrice);
     const bedrooms = bedroomsSelect.value;
-    if (bedrooms) {
-      const bedVal = parseInt(bedrooms);
-      results = results.filter(p => p.bedrooms >= bedVal);
-    }
+    if (bedrooms) results = results.filter(p => p.bedrooms >= parseInt(bedrooms));
     const bathrooms = bathroomsSelect.value;
-    if (bathrooms) {
-      const bathVal = parseFloat(bathrooms);
-      results = results.filter(p => p.bathrooms >= bathVal);
-    }
+    if (bathrooms) results = results.filter(p => p.bathrooms >= parseFloat(bathrooms));
     const propType = propertyTypeSelect.value;
-    if (propType) {
-      results = results.filter(p => p.propertyType === propType);
-    }
+    if (propType) results = results.filter(p => p.propertyType === propType);
     return results;
   }
 
@@ -457,6 +458,12 @@
                 <span><i class="fas fa-bath"></i> ${prop.bathrooms} baths</span>
                 <span><i class="fas fa-ruler-combined"></i> ${prop.area || 0} sqft</span>
               </div>
+              <div class="seller-name">
+                <i class="fas fa-user-circle"></i>
+                <a href="seller-profile.html?sellerId=${prop.sellerId}">
+                  ${prop.sellerName || 'Property Owner'}
+                </a>
+              </div>
               <span class="badge">${prop.propertyType || 'Property'}</span>
             </div>
           </div>
@@ -465,7 +472,9 @@
     }
     // Attach click handlers
     document.querySelectorAll('.property-card').forEach(card => {
-      card.addEventListener('click', () => {
+      card.addEventListener('click', (e) => {
+        // Prevent navigation if click is on the seller name link
+        if (e.target.closest('a')) return;
         const id = card.getAttribute('data-id');
         window.location.href = `property-detail.html?id=${id}`;
       });
@@ -494,10 +503,9 @@
           <b>${formatPrice(prop.price)}</b><br>
           ${prop.location}<br>
           ${prop.bedrooms} beds, ${prop.bathrooms} baths<br>
-          <strong>${getListingLabel(prop.listingType)}</strong>
+          <strong>${getListingLabel(prop.listingType)}</strong><br>
+          <small>${prop.sellerName || 'Owner'}</small>
         `);
-      } else {
-        // If no coordinates, we can still show a generic marker? Skip.
       }
     });
     if (paginated.length && paginated[0].lat && paginated[0].lng) {
@@ -531,7 +539,7 @@
     renderResults();
   });
 
-  // Auth buttons (same as homepage)
+  // Auth buttons
   document.getElementById('loginNavBtn')?.addEventListener('click', () => window.location.href = 'login.html');
   document.getElementById('signupNavBtn')?.addEventListener('click', () => window.location.href = 'login.html?signup=true');
 
