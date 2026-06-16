@@ -7,11 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
       background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
@@ -195,7 +191,7 @@
 <nav class="navbar">
   <div class="container nav-container">
     <a href="index.html" class="logo">Dominion <span>Home Hub</span></a>
-    <div></div> <!-- spacer -->
+    <div></div>
   </div>
 </nav>
 
@@ -272,10 +268,9 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendEmailVerification, updateProfile } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, updateProfile } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
   import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
-  // Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
     authDomain: "dominion-1e85f.firebaseapp.com",
@@ -292,7 +287,6 @@
   const db = getDatabase(app);
   const googleProvider = new GoogleAuthProvider();
 
-  // DOM elements
   const loginTab = document.getElementById('loginTabBtn');
   const signupTab = document.getElementById('signupTabBtn');
   const loginForm = document.getElementById('loginForm');
@@ -302,7 +296,6 @@
 
   let redirectUrl = null;
 
-  // Get redirect URL from query parameter
   function getRedirectUrl() {
     const params = new URLSearchParams(window.location.search);
     return params.get('redirect');
@@ -320,7 +313,7 @@
     setTimeout(() => { successDiv.style.display = 'none'; }, 3000);
   }
 
-  // Store user data in Realtime Database
+  // ---------- FIXED: Save user to database with explicit logging ----------
   async function saveUserToDatabase(uid, email, displayName, role) {
     try {
       await set(ref(db, `users/${uid}`), {
@@ -329,43 +322,25 @@
         role: role,
         createdAt: new Date().toISOString()
       });
+      console.log("✅ User saved to database:", uid, role);
+      return true;
     } catch (error) {
-      console.error("Error saving user to database:", error);
+      console.error("❌ Error saving user to database:", error);
       throw error;
     }
   }
 
-  // Check if user already has a role set (for existing accounts)
   async function getUserRole(uid) {
     try {
       const snapshot = await get(child(ref(db), `users/${uid}/role`));
-      if (snapshot.exists()) {
-        return snapshot.val();
-      }
-      return null;
+      return snapshot.exists() ? snapshot.val() : null;
     } catch (error) {
-      console.error("Error fetching user role:", error);
+      console.error("Error fetching role:", error);
       return null;
     }
   }
 
-  // Redirect after login based on role or stored redirect
-  async function handleRedirectAfterAuth(uid, email, displayName) {
-    let role = await getUserRole(uid);
-    let target = redirectUrl ? redirectUrl : (role === 'seller' ? 'dashboard.html' : 'index.html');
-    window.location.href = target;
-  }
-
-  // Common after login/signup
-  async function onAuthSuccess(user, role = null) {
-    if (!user) return;
-    if (role && !(await getUserRole(user.uid))) {
-      await saveUserToDatabase(user.uid, user.email, user.displayName || 'User', role);
-    }
-    await handleRedirectAfterAuth(user.uid, user.email, user.displayName);
-  }
-
-  // Email/Password Sign Up
+  // ---------- SIGN UP (Fixed flow) ----------
   document.getElementById('signupBtn').addEventListener('click', async () => {
     const name = document.getElementById('signupName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
@@ -387,18 +362,29 @@
     }
 
     try {
+      // 1. Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      // Update profile with display name
+
+      // 2. Update display name
       await updateProfile(user, { displayName: name });
-      // Save user to database with role
+
+      // 3. Save user to Realtime Database (this is CRITICAL)
       await saveUserToDatabase(user.uid, user.email, name, role);
+
       showSuccess('Account created successfully! Redirecting...');
+
+      // 4. Redirect based on role
       setTimeout(() => {
-        onAuthSuccess(user, role);
-      }, 1000);
+        if (role === 'seller') {
+          window.location.href = 'dashboard.html';
+        } else {
+          window.location.href = 'buyer-dashboard.html';
+        }
+      }, 1500);
+
     } catch (error) {
-      console.error(error);
+      console.error("Signup error:", error);
       if (error.code === 'auth/email-already-in-use') {
         showError('Email already registered. Please log in.');
       } else {
@@ -407,7 +393,7 @@
     }
   });
 
-  // Email/Password Login
+  // ---------- LOGIN ----------
   document.getElementById('loginBtn').addEventListener('click', async () => {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
@@ -419,8 +405,13 @@
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       showSuccess('Login successful! Redirecting...');
+      const role = await getUserRole(user.uid);
       setTimeout(() => {
-        onAuthSuccess(user);
+        if (role === 'seller') {
+          window.location.href = 'dashboard.html';
+        } else {
+          window.location.href = 'buyer-dashboard.html';
+        }
       }, 1000);
     } catch (error) {
       console.error(error);
@@ -432,23 +423,23 @@
     }
   });
 
-  // Google Sign-In (works for both login and signup)
-  async function handleGoogleSignIn(role = null) {
+  // ---------- GOOGLE SIGN-IN (Fixed) ----------
+  async function handleGoogleSignIn(role = 'buyer') {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
-      // Check if user already exists in database
       const existingRole = await getUserRole(user.uid);
       if (!existingRole) {
-        if (!role) {
-          // If Google sign-in used from login form, ask user to choose role? But we'll default to buyer
-          role = 'buyer';
-        }
         await saveUserToDatabase(user.uid, user.email, user.displayName || 'Google User', role);
       }
       showSuccess('Google sign-in successful! Redirecting...');
+      const finalRole = existingRole || role;
       setTimeout(() => {
-        handleRedirectAfterAuth(user.uid, user.email, user.displayName);
+        if (finalRole === 'seller') {
+          window.location.href = 'dashboard.html';
+        } else {
+          window.location.href = 'buyer-dashboard.html';
+        }
       }, 1000);
     } catch (error) {
       console.error(error);
@@ -456,10 +447,8 @@
     }
   }
 
-  document.getElementById('googleLoginBtn').addEventListener('click', () => handleGoogleSignIn());
+  document.getElementById('googleLoginBtn').addEventListener('click', () => handleGoogleSignIn('buyer'));
   document.getElementById('googleSignupBtn').addEventListener('click', () => {
-    // For signup, we need to know role. We'll prompt? Simpler: default to buyer or ask via a dialog? 
-    // For better UX, we can add a small select but to keep simple, we ask for role via a prompt.
     const role = prompt("Select role: type 'buyer' or 'seller'", "buyer");
     if (role === 'seller' || role === 'buyer') {
       handleGoogleSignIn(role);
@@ -468,7 +457,7 @@
     }
   });
 
-  // Tab switching
+  // ---------- TAB SWITCHING ----------
   loginTab.addEventListener('click', () => {
     loginTab.classList.add('active');
     signupTab.classList.remove('active');
@@ -486,10 +475,9 @@
     document.querySelector('.auth-header p').textContent = 'Join Dominion Home Hub today';
   });
 
-  // Check if already logged in
+  // ---------- AUTO-REDIRECT IF ALREADY LOGGED IN ----------
   auth.onAuthStateChanged(async (user) => {
     if (user) {
-      // User is already signed in, redirect accordingly
       redirectUrl = getRedirectUrl();
       if (redirectUrl) {
         window.location.href = redirectUrl;
@@ -498,11 +486,10 @@
         if (role === 'seller') {
           window.location.href = 'dashboard.html';
         } else {
-          window.location.href = 'index.html';
+          window.location.href = 'buyer-dashboard.html';
         }
       }
     } else {
-      // Not logged in, set redirect URL from query
       redirectUrl = getRedirectUrl();
     }
   });
