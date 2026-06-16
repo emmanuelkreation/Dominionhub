@@ -129,6 +129,7 @@
       top: 100px;
     }
     .contact-btn { width: 100%; background: #d97706; margin-top: 1rem; }
+    .contact-btn:hover { background: #b45309; }
     .save-btn {
       background: white;
       border: 1px solid #1e3a8a;
@@ -137,6 +138,7 @@
       margin-top: 0.5rem;
     }
     .save-btn.saved { background: #1e3a8a; color: white; border: none; }
+    .save-btn.saved i { color: white; }
     .offer-card {
       background: #f8fafc;
       border-radius: 1rem;
@@ -157,6 +159,7 @@
       border: 1px solid #e2e8f0;
       border-radius: 0.5rem;
     }
+    .mortgage-calc button { width: 100%; margin-top: 0.5rem; }
     .map-container {
       height: 250px;
       border-radius: 1rem;
@@ -251,9 +254,14 @@
 
   async function checkSavedStatus() {
     if (!currentUser) return false;
-    const snapshot = await get(child(ref(db), `users/${currentUser.uid}/savedProperties`));
-    const saved = snapshot.exists() ? snapshot.val() : [];
-    return saved.includes(currentProperty.id);
+    try {
+      const snapshot = await get(child(ref(db), `users/${currentUser.uid}/savedProperties`));
+      const saved = snapshot.exists() ? snapshot.val() : [];
+      return saved.includes(currentProperty.id);
+    } catch (err) {
+      console.error("Error checking saved status:", err);
+      return false;
+    }
   }
 
   async function toggleSaveProperty() {
@@ -261,19 +269,24 @@
       window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
       return;
     }
-    const userRef = ref(db, `users/${currentUser.uid}/savedProperties`);
-    const snapshot = await get(userRef);
-    let saved = snapshot.exists() ? snapshot.val() : [];
-    if (isSaved) {
-      saved = saved.filter(id => id !== currentProperty.id);
-      showToast('Property removed from saved', 'success');
-    } else {
-      saved.push(currentProperty.id);
-      showToast('Property saved to your dashboard', 'success');
+    try {
+      const userRef = ref(db, `users/${currentUser.uid}/savedProperties`);
+      const snapshot = await get(userRef);
+      let saved = snapshot.exists() ? snapshot.val() : [];
+      if (isSaved) {
+        saved = saved.filter(id => id !== currentProperty.id);
+        showToast('Property removed from saved', 'success');
+      } else {
+        saved.push(currentProperty.id);
+        showToast('Property saved to your dashboard', 'success');
+      }
+      await update(userRef, saved);
+      isSaved = !isSaved;
+      updateSaveButtonUI();
+    } catch (err) {
+      console.error("Error toggling save:", err);
+      showToast('Error saving property. Please try again.', 'error');
     }
-    await update(userRef, saved);
-    isSaved = !isSaved;
-    updateSaveButtonUI();
   }
 
   function updateSaveButtonUI() {
@@ -304,47 +317,67 @@
     setTimeout(() => toast.remove(), 3000);
   }
 
-  // Offer functions
+  // ---------- OFFER FUNCTIONS (with debug logs) ----------
   async function createOffer(propertyId, sellerId, amount) {
-    const offersRef = ref(db, 'offers');
-    const newRef = push(offersRef);
-    await set(newRef, {
-      propertyId: propertyId,
-      buyerId: currentUser.uid,
-      sellerId: sellerId,
-      amount: amount,
-      status: 'pending',
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    });
-    showToast('Offer submitted! Seller will review it.', 'success');
-    setTimeout(() => location.reload(), 1500);
+    if (!currentUser) {
+      showToast('Please log in to make an offer.', 'error');
+      return;
+    }
+    console.log("📝 Creating offer:", { propertyId, sellerId, amount, buyerId: currentUser.uid });
+    try {
+      const offersRef = ref(db, 'offers');
+      const newRef = push(offersRef);
+      const offerData = {
+        propertyId: propertyId,
+        buyerId: currentUser.uid,
+        sellerId: sellerId,
+        amount: amount,
+        status: 'pending',
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+      console.log("📤 Offer data:", offerData);
+      await set(newRef, offerData);
+      console.log("✅ Offer created successfully with ID:", newRef.key);
+      showToast('Offer submitted! Seller will review it.', 'success');
+      setTimeout(() => location.reload(), 1500);
+    } catch (err) {
+      console.error("❌ Error creating offer:", err);
+      showToast('Error submitting offer. Check console.', 'error');
+    }
   }
 
   async function checkExistingOffer() {
-    if (!currentUser || currentUser.uid === currentProperty.sellerId) return null;
-    const offersRef = ref(db, 'offers');
-    const q = query(offersRef, orderByChild('propertyId'), equalTo(currentProperty.id));
-    const snapshot = await get(q);
-    let existingOffer = null;
-    snapshot.forEach(child => {
-      const off = child.val();
-      if (off.buyerId === currentUser.uid) existingOffer = { id: child.key, ...off };
-    });
-    return existingOffer;
+    if (!currentUser || currentUser.uid === currentProperty?.sellerId) return null;
+    try {
+      const offersRef = ref(db, 'offers');
+      const q = query(offersRef, orderByChild('propertyId'), equalTo(currentProperty.id));
+      const snapshot = await get(q);
+      let existingOffer = null;
+      snapshot.forEach(child => {
+        const off = child.val();
+        if (off.buyerId === currentUser.uid) existingOffer = { id: child.key, ...off };
+      });
+      console.log("🔍 Existing offer found:", existingOffer);
+      return existingOffer;
+    } catch (err) {
+      console.error("Error checking existing offer:", err);
+      return null;
+    }
   }
 
   async function renderOfferSection(propertyId, sellerId) {
     if (!currentUser || currentUser.uid === sellerId) return;
+    console.log("💰 Rendering offer section for user:", currentUser.uid);
     const existingOffer = await checkExistingOffer();
     const offerDiv = document.createElement('div');
     offerDiv.className = 'offer-card';
     offerDiv.innerHTML = '<h3><i class="fas fa-tag"></i> Make an Offer</h3>';
     if (existingOffer) {
-      const statusText = existingOffer.status === 'pending' ? 'Pending Seller Response' :
-                         existingOffer.status === 'accepted' ? 'Accepted! 🎉' :
-                         existingOffer.status === 'rejected' ? 'Rejected' :
-                         existingOffer.status === 'countered' ? `Seller countered: $${existingOffer.counterAmount.toLocaleString()}` : '';
+      const statusText = existingOffer.status === 'pending' ? '⏳ Pending Seller Response' :
+                         existingOffer.status === 'accepted' ? '✅ Accepted! 🎉' :
+                         existingOffer.status === 'rejected' ? '❌ Rejected' :
+                         existingOffer.status === 'countered' ? `🔄 Seller countered: $${existingOffer.counterAmount.toLocaleString()}` : '';
       offerDiv.innerHTML += `
         <p><strong>Your offer:</strong> $${existingOffer.amount.toLocaleString()}</p>
         <p><strong>Status:</strong> ${statusText}</p>
@@ -383,9 +416,14 @@
     const acceptCounterBtn = document.getElementById('acceptCounterBtn');
     if (acceptCounterBtn && existingOffer) {
       acceptCounterBtn.addEventListener('click', async () => {
-        await update(ref(db, `offers/${existingOffer.id}`), { status: 'accepted', updatedAt: Date.now() });
-        showToast('You accepted the counter offer! Seller will be notified.', 'success');
-        setTimeout(() => location.reload(), 1500);
+        try {
+          await update(ref(db, `offers/${existingOffer.id}`), { status: 'accepted', updatedAt: Date.now() });
+          showToast('You accepted the counter offer! Seller will be notified.', 'success');
+          setTimeout(() => location.reload(), 1500);
+        } catch (err) {
+          console.error("Error accepting counter:", err);
+          showToast('Error accepting counter offer.', 'error');
+        }
       });
     }
     const newOfferBtn = document.getElementById('newOfferBtn');
@@ -400,6 +438,7 @@
   }
 
   function renderProperty(property, id) {
+    console.log("🏠 Rendering property:", property);
     const images = property.images && property.images.length ? property.images : ['https://via.placeholder.com/800x400?text=No+Image'];
     const listingLabel = getListingLabel(property.listingType);
     const typeClass = property.listingType === 'rent' ? 'rent' : (property.listingType === 'lease' ? 'lease' : '');
@@ -436,7 +475,7 @@
         <input type="number" id="downPayment" placeholder="Down Payment ($)" value="${Math.round(property.price * 0.2)}">
         <input type="number" id="interestRate" placeholder="Interest Rate (%)" value="6.5">
         <input type="number" id="loanTerm" placeholder="Loan Term (years)" value="30">
-        <button id="calculateBtn" class="btn-primary" style="width:100%; margin-top:0.5rem;">Calculate</button>
+        <button id="calculateBtn" class="btn-primary">Calculate</button>
         <p id="paymentResult" style="margin-top: 0.8rem; font-weight: bold;"></p>
       </div>
     `;
@@ -504,15 +543,19 @@
     // Map
     if (property.lat && property.lng) {
       setTimeout(() => {
-        const map = L.map('map').setView([property.lat, property.lng], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> & CartoDB'
-        }).addTo(map);
-        L.marker([property.lat, property.lng]).addTo(map).bindPopup(property.location).openPopup();
+        try {
+          const map = L.map('map').setView([property.lat, property.lng], 13);
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> & CartoDB'
+          }).addTo(map);
+          L.marker([property.lat, property.lng]).addTo(map).bindPopup(property.location).openPopup();
+        } catch (err) {
+          console.warn("Map error:", err);
+        }
       }, 100);
     }
 
-    // Contact button
+    // ---------- CONTACT SELLER BUTTON ----------
     const contactBtn = document.getElementById('contactSellerBtn');
     if (contactBtn) {
       if (!currentUser) {
@@ -524,11 +567,14 @@
         contactBtn.style.opacity = '0.6';
       } else {
         contactBtn.textContent = 'Contact Seller';
-        contactBtn.onclick = () => window.location.href = `chat.html?propertyId=${id}&sellerId=${property.sellerId}`;
+        contactBtn.onclick = () => {
+          console.log("📨 Contact Seller clicked. Redirecting to chat with:", { propertyId: id, sellerId: property.sellerId });
+          window.location.href = `chat.html?propertyId=${id}&sellerId=${property.sellerId}`;
+        };
       }
     }
 
-    // Save button
+    // ---------- SAVE BUTTON ----------
     const saveBtnElem = document.getElementById('savePropertyBtn');
     if (saveBtnElem && currentUser) {
       checkSavedStatus().then(saved => {
@@ -540,7 +586,7 @@
       saveBtnElem.onclick = () => window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
     }
 
-    // Offer section (render after seller card is in DOM)
+    // ---------- OFFER SECTION ----------
     if (currentUser && currentUser.uid !== property.sellerId) {
       renderOfferSection(id, property.sellerId);
     }
@@ -553,18 +599,20 @@
       detailContainer.innerHTML = '<div class="error">No property ID specified.</div>';
       return;
     }
+    console.log("🔍 Loading property with ID:", propertyId);
     try {
       const snapshot = await get(child(ref(db), `properties/${propertyId}`));
       if (snapshot.exists()) {
         currentProperty = { id: propertyId, ...snapshot.val() };
+        console.log("✅ Property loaded:", currentProperty);
         renderProperty(currentProperty, propertyId);
         storeRecentlyViewed(currentProperty);
       } else {
         detailContainer.innerHTML = '<div class="error">Property not found.</div>';
       }
     } catch (err) {
-      console.error(err);
-      detailContainer.innerHTML = '<div class="error">Error loading property.</div>';
+      console.error("❌ Error loading property:", err);
+      detailContainer.innerHTML = '<div class="error">Error loading property. Check console.</div>';
     }
   }
 
@@ -572,8 +620,10 @@
   document.getElementById('loginNavBtn')?.addEventListener('click', () => window.location.href = 'login.html');
   document.getElementById('signupNavBtn')?.addEventListener('click', () => window.location.href = 'login.html?signup=true');
 
+  // Auth state listener
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
+    console.log("🔐 Auth state changed. User:", user?.uid || "Not logged in");
     if (currentProperty) {
       renderProperty(currentProperty, currentProperty.id);
     }
