@@ -202,6 +202,7 @@
   let chatId = null;
   let messageListener = null;
 
+  const propertySummaryDiv = document.getElementById('propertySummary');
   const messagesArea = document.getElementById('messagesArea');
   const messageInput = document.getElementById('messageInput');
   const sendBtn = document.getElementById('sendBtn');
@@ -217,20 +218,30 @@
       propertySummaryDiv.innerHTML = '<div class="prop-details"><h3>Invalid property</h3></div>';
       return;
     }
-    const snapshot = await get(child(ref(db), `properties/${propertyId}`));
-    if (snapshot.exists()) {
-      const prop = snapshot.val();
-      const imageUrl = prop.images?.length ? prop.images[0] : 'https://via.placeholder.com/60';
-      document.querySelector('.prop-img').style.backgroundImage = `url('${imageUrl}')`;
-      document.querySelector('.prop-details h3').textContent = `${prop.propertyType} at ${prop.location.split(',')[0]}`;
-      document.querySelector('.prop-details p').textContent = `$${prop.price.toLocaleString()} - ${prop.listingType === 'buy' ? 'For Sale' : (prop.listingType === 'rent' ? 'For Rent' : 'For Lease')}`;
-    } else {
-      propertySummaryDiv.innerHTML = '<div class="prop-details"><h3>Property not found</h3></div>';
+    try {
+      const snapshot = await get(child(ref(db), `properties/${propertyId}`));
+      if (snapshot.exists()) {
+        const prop = snapshot.val();
+        const imageUrl = prop.images?.length ? prop.images[0] : 'https://via.placeholder.com/60';
+        document.querySelector('.prop-img').style.backgroundImage = `url('${imageUrl}')`;
+        document.querySelector('.prop-details h3').textContent = `${prop.propertyType} at ${prop.location.split(',')[0]}`;
+        document.querySelector('.prop-details p').textContent = `$${prop.price.toLocaleString()} - ${prop.listingType === 'buy' ? 'For Sale' : (prop.listingType === 'rent' ? 'For Rent' : 'For Lease')}`;
+      } else {
+        propertySummaryDiv.innerHTML = '<div class="prop-details"><h3>Property not found</h3></div>';
+      }
+    } catch (err) {
+      console.error("Error loading property:", err);
+      propertySummaryDiv.innerHTML = '<div class="prop-details"><h3>Error loading property</h3></div>';
     }
   }
 
   async function getOrCreateChat() {
-    if (!currentUser || !propertyId || !sellerId) return null;
+    if (!currentUser || !propertyId || !sellerId) {
+      console.warn("Missing data for chat:", { currentUser: currentUser?.uid, propertyId, sellerId });
+      return null;
+    }
+    console.log("getOrCreateChat called with:", { propertyId, sellerId, currentUserUid: currentUser.uid });
+
     const chatsRef = ref(db, 'chats');
     const snapshot = await get(chatsRef);
     let existingChatId = null;
@@ -250,13 +261,14 @@
       await update(ref(db, `chats/${chatId}`), {
         [isSeller ? 'sellerHasUnread' : 'buyerHasUnread']: false
       });
+      console.log("Using existing chat:", chatId);
     } else {
-      const newChatRef = push(ref(db, 'chats'));
+      const newChatRef = push(chatsRef);
       chatId = newChatRef.key;
       const buyerId = (currentUser.uid !== sellerId) ? currentUser.uid : sellerId;
       const sellerIdFinal = (currentUser.uid !== sellerId) ? sellerId : currentUser.uid;
       const buyerName = currentUser.displayName || 'Buyer';
-      await set(newChatRef, {
+      const chatData = {
         propertyId: propertyId,
         buyerId: buyerId,
         sellerId: sellerIdFinal,
@@ -265,7 +277,10 @@
         lastUpdated: Date.now(),
         buyerHasUnread: false,
         sellerHasUnread: false
-      });
+      };
+      console.log("Creating new chat with data:", chatData);
+      await set(newChatRef, chatData);
+      console.log("New chat created:", chatId);
     }
     return chatId;
   }
@@ -282,46 +297,42 @@
     messagesArea.scrollTop = messagesArea.scrollHeight;
   }
 
-  // Load all existing messages once, sort by timestamp, then listen for new ones
   async function loadMessages() {
     if (!chatId) return;
-    if (messageListener) messageListener(); // remove previous listener if any
+    if (messageListener) messageListener(); // remove previous
     const messagesRef = ref(db, `messages/${chatId}`);
     
-    // First, fetch all existing messages
-    const snapshot = await get(messagesRef);
-    if (snapshot.exists()) {
-      const messages = [];
-      snapshot.forEach(child => {
-        messages.push({ id: child.key, ...child.val() });
+    try {
+      const snapshot = await get(messagesRef);
+      if (snapshot.exists()) {
+        const messages = [];
+        snapshot.forEach(child => {
+          messages.push({ id: child.key, ...child.val() });
+        });
+        messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+        messagesArea.innerHTML = '';
+        messages.forEach(msg => displayMessage(msg));
+        console.log(`Loaded ${messages.length} messages for chat ${chatId}`);
+      } else {
+        messagesArea.innerHTML = '<div style="text-align:center; padding:2rem;">No messages yet. Send a message to start the conversation.</div>';
+      }
+      
+      // Listen for new messages
+      messageListener = onChildAdded(messagesRef, (snapshot) => {
+        const msg = snapshot.val();
+        // Avoid duplicates: if message already displayed, skip (we can check by ID but it's fine)
+        displayMessage(msg);
       });
-      // Sort by timestamp (oldest first)
-      messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-      messagesArea.innerHTML = '';
-      messages.forEach(msg => displayMessage(msg));
-    } else {
-      messagesArea.innerHTML = '<div style="text-align:center; padding:2rem;">No messages yet. Send a message to start the conversation.</div>';
+      
+      // Mark unread as false
+      const isSeller = (currentUser.uid === sellerId);
+      await update(ref(db, `chats/${chatId}`), {
+        [isSeller ? 'sellerHasUnread' : 'buyerHasUnread']: false
+      });
+    } catch (err) {
+      console.error("Error loading messages:", err);
+      messagesArea.innerHTML = '<div style="text-align:center; padding:2rem;">Error loading messages.</div>';
     }
-    
-    // Then listen for new messages only (onChildAdded will fire for new ones after this point)
-    messageListener = onChildAdded(messagesRef, (snapshot) => {
-      // We need to avoid duplicates. Since we already loaded all, we can check if it's new.
-      // A simple approach: just add any new message that appears after the snapshot.
-      // But onChildAdded will also fire for existing ones if we attach before get.
-      // To avoid duplicates, we'll attach after get and use a flag or rely on the fact that
-      // onChildAdded will not re-fire existing ones if we attach after the initial get.
-      // Actually, onChildAdded attached after get will fire only for new messages,
-      // because Firebase remembers the last snapshot. So this is fine.
-      const msg = snapshot.val();
-      // Check if this message already exists in the DOM (optional)
-      displayMessage(msg);
-    });
-    
-    // Mark unread as false
-    const isSeller = (currentUser.uid === sellerId);
-    await update(ref(db, `chats/${chatId}`), {
-      [isSeller ? 'sellerHasUnread' : 'buyerHasUnread']: false
-    });
   }
 
   function escapeHtml(str) {
@@ -331,14 +342,19 @@
 
   async function sendMessage() {
     const text = messageInput.value.trim();
-    if (!text || !chatId) return;
+    if (!text || !chatId) {
+      console.warn("Cannot send message: no chatId or empty text");
+      return;
+    }
     try {
       const messageRef = push(ref(db, `messages/${chatId}`));
-      await set(messageRef, {
+      const msgData = {
         senderId: currentUser.uid,
         text: text,
         timestamp: Date.now()
-      });
+      };
+      console.log("Sending message:", msgData);
+      await set(messageRef, msgData);
       await update(ref(db, `chats/${chatId}`), {
         lastMessage: text,
         lastUpdated: Date.now(),
@@ -357,12 +373,13 @@
       return;
     }
     currentUser = user;
+    console.log("User authenticated:", currentUser.uid);
     await loadProperty();
     await getOrCreateChat();
     if (chatId) {
       await loadMessages();
     } else {
-      messagesArea.innerHTML = '<div style="text-align:center; padding:2rem;">Unable to start chat.</div>';
+      messagesArea.innerHTML = '<div style="text-align:center; padding:2rem;">Unable to start chat. Please try again.</div>';
     }
   });
 
