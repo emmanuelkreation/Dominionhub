@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Seller Profile – Dominion Home Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f2937; }
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+    .navbar {
+      background: white;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      flex-wrap: wrap;
+    }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #1e3a8a;
+      text-decoration: none;
+    }
+    .logo span { color: #d97706; }
+    .nav-links { display: flex; gap: 1rem; align-items: center; }
+    .btn-outline {
+      border: 1.5px solid #1e3a8a;
+      background: transparent;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      color: #1e3a8a;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: #1e3a8a;
+      border: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 40px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .profile-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      align-items: center;
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      margin: 2rem 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .profile-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      color: #1e3a8a;
+      flex-shrink: 0;
+    }
+    .profile-info h1 { font-size: 2rem; margin-bottom: 0.3rem; }
+    .profile-info p { color: #6b7280; margin-bottom: 0.3rem; }
+    .property-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+      margin: 1.5rem 0 3rem;
+    }
+    .property-card {
+      background: white;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+    .property-card:hover { transform: translateY(-4px); }
+    .card-img {
+      height: 200px;
+      background-size: cover;
+      background-position: center;
+    }
+    .card-content { padding: 1rem; }
+    .price { font-size: 1.4rem; font-weight: 800; color: #1e3a8a; }
+    .address { color: #6b7280; font-size: 0.85rem; margin: 0.3rem 0; }
+    .features { display: flex; gap: 1rem; font-size: 0.8rem; margin: 0.5rem 0; }
+    .badge {
+      display: inline-block;
+      background: #eef2ff;
+      padding: 0.2rem 0.6rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #1e3a8a;
+    }
+    .listing-type-badge {
+      display: inline-block;
+      background: #1e3a8a;
+      color: white;
+      padding: 0.2rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+    .listing-type-badge.rent { background: #d97706; }
+    .listing-type-badge.lease { background: #10b981; }
+    .error, .loading { text-align: center; padding: 3rem; }
+    footer {
+      background: #0f172a;
+      color: #cbd5e1;
+      padding: 1.5rem;
+      margin-top: 2rem;
+      text-align: center;
+    }
+    .back-link {
+      display: inline-block;
+      margin: 1rem 0;
+      color: #1e3a8a;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-container">
+    <a href="index.html" class="logo">Dominion <span>Home Hub</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="listings.html">Listings</a>
+      <button id="loginNavBtn" class="btn-outline">Log in</button>
+      <button id="signupNavBtn" class="btn-primary">Sign up</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <a href="javascript:history.back()" class="back-link"><i class="fas fa-arrow-left"></i> Back</a>
+
+  <div id="profileContainer">
+    <div class="loading">Loading seller profile...</div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2025 Dominion Home Hub</p>
+  </div>
+</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, get, child, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
+    authDomain: "dominion-1e85f.firebaseapp.com",
+    databaseURL: "https://dominion-1e85f-default-rtdb.firebaseio.com",
+    projectId: "dominion-1e85f",
+    storageBucket: "dominion-1e85f.firebasestorage.app",
+    messagingSenderId: "1036601319820",
+    appId: "1:1036601319820:web:3395f663c3e05326ed76a9",
+    measurementId: "G-BZLJPTFMZ1"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const sellerId = urlParams.get('sellerId');
+
+  const profileContainer = document.getElementById('profileContainer');
+
+  function formatPrice(price) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price);
+  }
+
+  function getListingLabel(type) {
+    if (type === 'buy') return 'For Sale';
+    if (type === 'rent') return 'For Rent';
+    return 'For Lease';
+  }
+
+  function renderPropertyCards(properties) {
+    if (!properties.length) {
+      return '<p style="text-align:center; grid-column:1/-1;">This seller has no active properties.</p>';
+    }
+    return properties.map(prop => {
+      const imageUrl = prop.images?.[0] || 'https://via.placeholder.com/600x400?text=No+Image';
+      const listingLabel = getListingLabel(prop.listingType);
+      const typeClass = prop.listingType === 'rent' ? 'rent' : (prop.listingType === 'lease' ? 'lease' : '');
+      return `
+        <div class="property-card" data-id="${prop.id}">
+          <div class="card-img" style="background-image: url('${imageUrl}');"></div>
+          <div class="card-content">
+            <div class="price">${formatPrice(prop.price)} <span class="listing-type-badge ${typeClass}">${listingLabel}</span></div>
+            <div class="address"><i class="fas fa-map-marker-alt"></i> ${prop.location}</div>
+            <div class="features">
+              <span><i class="fas fa-bed"></i> ${prop.bedrooms} beds</span>
+              <span><i class="fas fa-bath"></i> ${prop.bathrooms} baths</span>
+              <span><i class="fas fa-ruler-combined"></i> ${prop.area || 0} sqft</span>
+            </div>
+            <span class="badge">${prop.propertyType || 'Property'}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function loadSellerProfile() {
+    if (!sellerId) {
+      profileContainer.innerHTML = '<div class="error">No seller specified.</div>';
+      return;
+    }
+
+    try {
+      // Fetch seller info
+      const sellerSnap = await get(child(ref(db), `users/${sellerId}`));
+      if (!sellerSnap.exists()) {
+        profileContainer.innerHTML = '<div class="error">Seller not found.</div>';
+        return;
+      }
+      const sellerData = sellerSnap.val();
+      const sellerName = sellerData.displayName || 'Seller';
+      const email = sellerData.email || '';
+      const memberSince = sellerData.createdAt ? new Date(sellerData.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : 'Unknown';
+
+      // Fetch properties by this seller
+      const propertiesRef = ref(db, 'properties');
+      const q = query(propertiesRef, orderByChild('sellerId'), equalTo(sellerId));
+      const propSnap = await get(q);
+      const properties = [];
+      if (propSnap.exists()) {
+        propSnap.forEach(child => properties.push({ id: child.key, ...child.val() }));
+      }
+
+      // Sort by createdAt (newest first)
+      properties.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      // Build HTML
+      const profileHtml = `
+        <div class="profile-header">
+          <div class="profile-avatar"><i class="fas fa-user-circle"></i></div>
+          <div class="profile-info">
+            <h1>${sellerName}</h1>
+            <p><i class="fas fa-envelope"></i> ${email}</p>
+            <p><i class="fas fa-calendar-alt"></i> Member since ${memberSince}</p>
+          </div>
+        </div>
+        <h2>Properties by ${sellerName}</h2>
+        <div class="property-grid">
+          ${renderPropertyCards(properties)}
+        </div>
+      `;
+      profileContainer.innerHTML = profileHtml;
+
+      // Click handler for property cards
+      document.querySelectorAll('.property-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const id = card.getAttribute('data-id');
+          window.location.href = `property-detail.html?id=${id}`;
+        });
+      });
+    } catch (err) {
+      console.error(err);
+      profileContainer.innerHTML = '<div class="error">Error loading seller profile.</div>';
+    }
+  }
+
+  // Auth buttons for top nav
+  document.getElementById('loginNavBtn')?.addEventListener('click', () => window.location.href = 'login.html');
+  document.getElementById('signupNavBtn')?.addEventListener('click', () => window.location.href = 'login.html?signup=true');
+
+  loadSellerProfile();
+</script>
+</body>
+</html>
