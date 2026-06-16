@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    /* === All styles remain exactly as before === */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f2937; }
     .container { max-width: 1400px; margin: 0 auto; padding: 0 24px; }
@@ -279,7 +280,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getDatabase, ref, set, push, get, remove, update, child, query, orderByChild, equalTo, onChildAdded } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getDatabase, ref, set, push, get, remove, update, child, query, orderByChild, equalTo, onChildAdded, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
@@ -304,8 +305,9 @@
   let currentBuyerName = null;
   let messageListener = null;
   let refreshInterval = null;
+  let chatsListener = null; // <-- new listener reference
 
-  // DOM elements
+  // DOM elements (same as before)
   const formTitle = document.getElementById('formTitle');
   const propertyIdInput = document.getElementById('propertyId');
   const listingType = document.getElementById('listingType');
@@ -368,7 +370,7 @@
   });
 
   // ---------- PROPERTY CRUD ----------
-  async function loadSellerProperties() {
+  async function loadSellerProperties() { /* unchanged */ 
     if (!currentUser) return;
     console.log("📋 Loading seller properties for:", currentUser.uid);
     try {
@@ -389,7 +391,7 @@
     }
   }
 
-  function renderPropertiesTable(properties) {
+  function renderPropertiesTable(properties) { /* unchanged */ 
     if (properties.length === 0) {
       propertiesListDiv.innerHTML = '<p>No properties found.</p>';
       return;
@@ -416,7 +418,7 @@
     });
   }
 
-  async function loadPropertyForEdit(propertyId) {
+  async function loadPropertyForEdit(propertyId) { /* unchanged */ 
     try {
       const snapshot = await get(child(ref(db), `properties/${propertyId}`));
       if (snapshot.exists()) {
@@ -443,7 +445,7 @@
     } catch (err) { showError('Failed to load property'); }
   }
 
-  async function deleteProperty(propertyId) {
+  async function deleteProperty(propertyId) { /* unchanged */ 
     try {
       await remove(ref(db, `properties/${propertyId}`));
       showSuccess('Property deleted');
@@ -451,7 +453,7 @@
     } catch (err) { showError('Error deleting property'); }
   }
 
-  async function saveProperty() {
+  async function saveProperty() { /* unchanged */ 
     if (!currentUser) { showError('Not logged in'); return; }
     if (!price.value || !location.value) { showError('Price and location required'); return; }
     const imageUrls = getImageUrlsFromInput();
@@ -486,7 +488,7 @@
     } catch (err) { showError('Error saving: ' + err.message); }
   }
 
-  function resetForm() {
+  function resetForm() { /* unchanged */ 
     editingPropertyId = null;
     propertyIdInput.value = '';
     listingType.value = 'buy';
@@ -507,7 +509,7 @@
   }
 
   // ---------- SELLER PROFILE ----------
-  async function loadSellerProfile() {
+  async function loadSellerProfile() { /* unchanged */ 
     if (!currentUser) return;
     const snapshot = await get(child(ref(db), `users/${currentUser.uid}`));
     if (snapshot.exists()) {
@@ -518,7 +520,7 @@
     }
   }
 
-  async function updateSellerBrandName() {
+  async function updateSellerBrandName() { /* unchanged */ 
     const newName = sellerDisplayNameInput.value.trim();
     if (!newName) { showError('Please enter a brand/display name'); return; }
     try {
@@ -536,24 +538,39 @@
     } catch (err) { showError('Error updating brand name'); }
   }
 
-  // ---------- CHAT SYSTEM ----------
+  // ---------- CHAT SYSTEM (REAL-TIME) ----------
   async function loadChats() {
     if (!currentUser) {
       console.warn("loadChats: No currentUser");
       return;
     }
-    console.log("💬 Loading chats for seller:", currentUser.uid);
-    try {
-      const q = query(ref(db, 'chats'), orderByChild('sellerId'), equalTo(currentUser.uid));
-      const snapshot = await get(q);
+    console.log("💬 Loading chats for seller (real-time):", currentUser.uid);
+
+    // Remove previous listener to avoid duplicates
+    if (chatsListener) {
+      chatsListener();
+      chatsListener = null;
+    }
+
+    const chatsRef = ref(db, 'chats');
+    const q = query(chatsRef, orderByChild('sellerId'), equalTo(currentUser.uid));
+
+    chatsListener = onValue(q, async (snapshot) => {
       if (!snapshot.exists()) {
         console.log("ℹ️ No chats found");
         chatListContainer.innerHTML = '<p>No messages yet. Buyers will contact you from property pages.</p>';
         return;
       }
+
       let chats = [];
-      snapshot.forEach(child => chats.push({ id: child.key, ...child.val() }));
+      snapshot.forEach(child => {
+        chats.push({ id: child.key, ...child.val() });
+      });
+
+      // Sort by lastUpdated (newest first)
+      chats.sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
       console.log(`✅ Found ${chats.length} chats`);
+
       let html = '';
       for (const chat of chats) {
         const buyerSnap = await get(child(ref(db), `users/${chat.buyerId}`));
@@ -561,6 +578,7 @@
         const propSnap = await get(child(ref(db), `properties/${chat.propertyId}`));
         const propTitle = propSnap.exists() ? propSnap.val().location.split(',')[0] : 'Property';
         const unreadBadge = (chat.sellerHasUnread === true) ? '<span class="unread-badge">New</span>' : '';
+
         html += `
           <div class="chat-item" data-chatid="${chat.id}" data-buyerid="${chat.buyerId}" data-buyername="${buyerName}">
             <div class="chat-info">
@@ -572,35 +590,43 @@
         `;
       }
       chatListContainer.innerHTML = html;
+
+      // Attach click handlers
       document.querySelectorAll('.chat-item').forEach(el => {
         el.addEventListener('click', () => {
           const chatId = el.getAttribute('data-chatid');
           const buyerId = el.getAttribute('data-buyerid');
           const buyerName = el.getAttribute('data-buyername');
           openChat(chatId, buyerId, buyerName);
+          // Mark as read
           update(ref(db, `chats/${chatId}`), { sellerHasUnread: false });
           el.querySelector('.unread-badge')?.remove();
         });
       });
-    } catch (err) {
-      console.error("❌ Error loading chats:", err);
+    }, (error) => {
+      console.error("❌ Chat listener error:", error);
       chatListContainer.innerHTML = '<p>Error loading chats. Check console.</p>';
-    }
+    });
   }
 
   function openChat(chatId, buyerId, buyerName) {
+    // Remove previous message listener
     if (messageListener) messageListener();
+
     currentChatId = chatId;
     currentBuyerId = buyerId;
     currentBuyerName = buyerName;
     chatWithNameSpan.textContent = buyerName;
     chatPanel.style.display = 'block';
     chatMessagesArea.innerHTML = '';
+
     const messagesRef = ref(db, `messages/${chatId}`);
     messageListener = onChildAdded(messagesRef, (snapshot) => {
       const msg = snapshot.val();
       displayChatMessage(msg);
     });
+
+    // Mark as read
     update(ref(db, `chats/${chatId}`), { sellerHasUnread: false });
   }
 
@@ -639,7 +665,7 @@
   }
 
   // ---------- OFFERS ----------
-  async function loadOffers() {
+  async function loadOffers() { /* unchanged */ 
     if (!currentUser) {
       console.warn("loadOffers: No currentUser");
       return;
@@ -687,7 +713,6 @@
       }
       document.getElementById('offersList').innerHTML = html;
 
-      // Attach event listeners
       document.querySelectorAll('.accept-offer').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           const offerId = btn.getAttribute('data-id');
@@ -728,7 +753,7 @@
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     document.getElementById(`${tabId}Tab`).classList.add('active');
     if (tabId === 'offers') loadOffers();
-    if (tabId === 'chats') loadChats();
+    if (tabId === 'chats') loadChats(); // Will reattach listener
   }
 
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -738,15 +763,15 @@
     });
   });
 
-  // ---------- AUTO REFRESH ----------
+  // ---------- AUTO REFRESH (still useful for offers, but chats are real-time) ----------
   function startRefresh() {
     if (refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(() => {
       const activeTab = document.querySelector('.tab-btn.active');
       if (activeTab) {
         const tabId = activeTab.getAttribute('data-tab');
-        if (tabId === 'chats') loadChats();
         if (tabId === 'offers') loadOffers();
+        // chats are live, no need to refresh
       }
     }, 10000);
   }
@@ -757,7 +782,13 @@
   updateBrandBtn.addEventListener('click', updateSellerBrandName);
   sendChatBtn.addEventListener('click', sendChatMessage);
   chatMessageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
-  document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'index.html'; });
+  document.getElementById('logoutBtn').addEventListener('click', async () => { 
+    // Clean up listeners
+    if (chatsListener) chatsListener();
+    if (messageListener) messageListener();
+    await signOut(auth); 
+    window.location.href = 'index.html'; 
+  });
 
   // ---------- AUTH ----------
   onAuthStateChanged(auth, async (user) => {
@@ -777,7 +808,7 @@
     console.log("✅ Seller role confirmed");
     await loadSellerProfile();
     loadSellerProperties();
-    loadChats();
+    loadChats();   // starts real-time listener
     loadOffers();
     startRefresh();
   });
