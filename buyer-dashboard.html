@@ -235,7 +235,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getDatabase, ref, get, update, child, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getDatabase, ref, get, update, child, query, orderByChild, equalTo, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAhgR45OO17vNl-xO7r2dgrRiJ7Kp1hVc4",
@@ -256,6 +256,7 @@
   let userData = null;
   let savedPropertiesIds = [];
   let savedSearches = [];
+  let chatsListener = null; // real-time listener reference
 
   // DOM elements
   const savedPropsDiv = document.getElementById('savedPropertiesList');
@@ -315,7 +316,7 @@
     savedCountSpan.textContent = savedPropertiesIds.length;
     searchesCountSpan.textContent = savedSearches.length;
     await loadSavedProperties();
-    await loadChats();
+    await loadChats(); // attaches real-time listener
     renderSavedSearches();
     loadRecentlyViewed();
   }
@@ -387,21 +388,40 @@
     await loadSavedProperties();
   }
 
+  // ---------- CHATS (REAL-TIME) ----------
   async function loadChats() {
-    if (!currentUser) return;
-    console.log("Loading chats for buyer:", currentUser.uid);
-    try {
-      const q = query(ref(db, 'chats'), orderByChild('buyerId'), equalTo(currentUser.uid));
-      const snapshot = await get(q);
-      console.log("Chats snapshot exists?", snapshot.exists());
+    if (!currentUser) {
+      console.warn("loadChats: No currentUser");
+      return;
+    }
+    console.log("💬 Loading chats for buyer (real-time):", currentUser.uid);
+
+    // Remove previous listener to avoid duplicates
+    if (chatsListener) {
+      chatsListener();
+      chatsListener = null;
+    }
+
+    const q = query(ref(db, 'chats'), orderByChild('buyerId'), equalTo(currentUser.uid));
+
+    chatsListener = onValue(q, async (snapshot) => {
       if (!snapshot.exists()) {
+        console.log("ℹ️ No chats found for buyer");
         chatsDiv.innerHTML = '<p>No active chats. Contact sellers from property pages.</p>';
         chatsCountSpan.textContent = '0';
         return;
       }
-      const chats = [];
-      snapshot.forEach(child => chats.push({ id: child.key, ...child.val() }));
+
+      let chats = [];
+      snapshot.forEach(child => {
+        chats.push({ id: child.key, ...child.val() });
+      });
+
+      // Sort by lastUpdated (newest first)
+      chats.sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
       chatsCountSpan.textContent = chats.length;
+      console.log(`✅ Found ${chats.length} chats for buyer`);
+
       let html = '';
       for (const chat of chats) {
         const propSnap = await get(child(ref(db), `properties/${chat.propertyId}`));
@@ -409,6 +429,7 @@
         const sellerName = sellerSnap.exists() ? (sellerSnap.val().displayName || 'Seller') : 'Seller';
         const propTitle = propSnap.exists() ? propSnap.val().location.split(',')[0] : 'Property';
         const unread = chat.buyerHasUnread ? '<span class="unread-badge">New</span>' : '';
+
         html += `
           <div class="chat-item" data-chatid="${chat.id}" data-propid="${chat.propertyId}" data-sellerid="${chat.sellerId}">
             <div class="chat-info">
@@ -420,6 +441,7 @@
         `;
       }
       chatsDiv.innerHTML = html;
+
       document.querySelectorAll('#chatsTab .chat-item').forEach(el => {
         el.addEventListener('click', () => {
           const propId = el.getAttribute('data-propid');
@@ -427,12 +449,13 @@
           window.location.href = `chat.html?propertyId=${propId}&sellerId=${sellerId}`;
         });
       });
-    } catch (err) {
-      console.error("Error loading chats:", err);
-      chatsDiv.innerHTML = '<p>Error loading chats. Make sure security rules have .indexOn "buyerId".</p>';
-    }
+    }, (error) => {
+      console.error("❌ Chat listener error:", error);
+      chatsDiv.innerHTML = '<p>Error loading chats. Check console.</p>';
+    });
   }
 
+  // ---------- SAVED SEARCHES ----------
   function renderSavedSearches() {
     if (!savedSearches.length) {
       savedSearchesDiv.innerHTML = '<p>No saved searches. Use the form above.</p>';
@@ -525,7 +548,7 @@
     });
   }
 
-  // Tab switching
+  // ---------- TAB SWITCHING ----------
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -533,17 +556,24 @@
       const tabId = btn.getAttribute('data-tab');
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.getElementById(`${tabId}Tab`).classList.add('active');
-      // Optionally refresh content when tab opens
-      if (tabId === 'chats') loadChats();
+      // Refresh content when tab opens
+      if (tabId === 'chats') loadChats(); // re-attach real-time listener
       if (tabId === 'saved') loadSavedProperties();
       if (tabId === 'recent') loadRecentlyViewed();
     });
   });
 
+  // ---------- EVENT LISTENERS ----------
   updateNameBtn.addEventListener('click', updateDisplayName);
   saveCurrentSearchBtn.addEventListener('click', saveCurrentSearch);
-  document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'index.html'; });
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    // Clean up listener
+    if (chatsListener) chatsListener();
+    await signOut(auth);
+    window.location.href = 'index.html';
+  });
 
+  // ---------- AUTH ----------
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = 'login.html?redirect=buyer-dashboard.html';
