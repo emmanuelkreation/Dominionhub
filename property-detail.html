@@ -128,6 +128,14 @@
       position: sticky;
       top: 100px;
     }
+    .seller-link {
+      color: #d97706;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .seller-link:hover {
+      text-decoration: underline;
+    }
     .contact-btn { width: 100%; background: #d97706; margin-top: 1rem; }
     .contact-btn:hover { background: #b45309; }
     .save-btn {
@@ -317,7 +325,7 @@
     setTimeout(() => toast.remove(), 3000);
   }
 
-  // ---------- OFFER FUNCTIONS (with debug logs) ----------
+  // ---------- OFFER FUNCTIONS ----------
   async function createOffer(propertyId, sellerId, amount) {
     if (!currentUser) {
       showToast('Please log in to make an offer.', 'error');
@@ -394,7 +402,6 @@
         <button id="submitOfferBtn" class="btn-primary">Submit Offer</button>
       `;
     }
-    // Append after seller card
     const sellerCard = document.querySelector('.seller-card');
     if (sellerCard && !document.querySelector('.offer-card')) {
       sellerCard.insertAdjacentElement('afterend', offerDiv);
@@ -404,7 +411,6 @@
       else if (sellerCard) sellerCard.insertAdjacentElement('afterend', offerDiv);
     }
 
-    // Attach event listeners
     const submitBtn = document.getElementById('submitOfferBtn');
     if (submitBtn) {
       submitBtn.addEventListener('click', async () => {
@@ -495,7 +501,11 @@
         <div>
           <div class="seller-card">
             <h3><i class="fas fa-user"></i> Seller Information</h3>
-            <p><strong>Name:</strong> ${property.sellerName || 'Property Owner'}</p>
+            <p><strong>Name:</strong>
+              <a href="seller-profile.html?sellerId=${property.sellerId}" class="seller-link">
+                ${property.sellerName || 'Property Owner'}
+              </a>
+            </p>
             <p><strong>Member since:</strong> ${property.sellerSince || '2025'}</p>
             <button id="contactSellerBtn" class="btn-primary contact-btn">Contact Seller</button>
             <button id="savePropertyBtn" class="btn-outline save-btn"><i class="far fa-heart"></i> Save Property</button>
