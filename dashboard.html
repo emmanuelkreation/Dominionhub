@@ -305,7 +305,7 @@
   let currentBuyerName = null;
   let messageListener = null;
   let refreshInterval = null;
-  let chatsListener = null; // <-- new listener reference
+  let chatsListener = null; // new listener reference
 
   // DOM elements (same as before)
   const formTitle = document.getElementById('formTitle');
@@ -369,29 +369,35 @@
     updateImagePreview(currentImageUrls);
   });
 
-  // ---------- PROPERTY CRUD ----------
-  async function loadSellerProperties() { /* unchanged */ 
+  // ---------- PROPERTY CRUD (FIXED) ----------
+  async function loadSellerProperties() {
     if (!currentUser) return;
-    console.log("📋 Loading seller properties for:", currentUser.uid);
+    console.log("📋 Loading seller properties for UID:", currentUser.uid);
     try {
       const q = query(ref(db, 'properties'), orderByChild('sellerId'), equalTo(currentUser.uid));
       const snapshot = await get(q);
+      console.log("Snapshot exists?", snapshot.exists());
+      console.log("Number of properties found:", snapshot.size);
       if (snapshot.exists()) {
         const properties = [];
-        snapshot.forEach(child => properties.push({ id: child.key, ...child.val() }));
-        console.log(`✅ Found ${properties.length} properties`);
+        snapshot.forEach(child => {
+          const data = child.val();
+          console.log("Property ID:", child.key, "sellerId:", data.sellerId);
+          properties.push({ id: child.key, ...data });
+        });
+        console.log(`✅ Found ${properties.length} properties for seller`);
         renderPropertiesTable(properties);
       } else {
-        console.log("ℹ️ No properties found");
+        console.log("ℹ️ No properties found for seller");
         propertiesListDiv.innerHTML = '<p>No properties yet. Add your first property.</p>';
       }
     } catch (err) {
       console.error("❌ Error loading properties:", err);
-      propertiesListDiv.innerHTML = '<p>Error loading properties.</p>';
+      propertiesListDiv.innerHTML = '<p>Error loading properties. Check console.</p>';
     }
   }
 
-  function renderPropertiesTable(properties) { /* unchanged */ 
+  function renderPropertiesTable(properties) {
     if (properties.length === 0) {
       propertiesListDiv.innerHTML = '<p>No properties found.</p>';
       return;
@@ -418,7 +424,7 @@
     });
   }
 
-  async function loadPropertyForEdit(propertyId) { /* unchanged */ 
+  async function loadPropertyForEdit(propertyId) {
     try {
       const snapshot = await get(child(ref(db), `properties/${propertyId}`));
       if (snapshot.exists()) {
@@ -445,7 +451,7 @@
     } catch (err) { showError('Failed to load property'); }
   }
 
-  async function deleteProperty(propertyId) { /* unchanged */ 
+  async function deleteProperty(propertyId) {
     try {
       await remove(ref(db, `properties/${propertyId}`));
       showSuccess('Property deleted');
@@ -453,7 +459,8 @@
     } catch (err) { showError('Error deleting property'); }
   }
 
-  async function saveProperty() { /* unchanged */ 
+  // ---------- SAVE PROPERTY (FIXED) ----------
+  async function saveProperty() {
     if (!currentUser) { showError('Not logged in'); return; }
     if (!price.value || !location.value) { showError('Price and location required'); return; }
     const imageUrls = getImageUrlsFromInput();
@@ -467,13 +474,16 @@
       area: parseFloat(area.value),
       propertyType: propertyType.value,
       status: status.value,
-      isFeatured: isFeatured.value === 'true',
+      isFeatured: isFeatured.value === 'true',  // boolean
       description: description.value,
-      sellerId: currentUser.uid,
+      sellerId: currentUser.uid,  // CRITICAL: force set
       sellerName: sellerName,
       createdAt: new Date().toISOString(),
       images: imageUrls
     };
+
+    console.log("📤 Saving property with data:", propertyData);
+
     try {
       if (editingPropertyId) {
         await update(ref(db, `properties/${editingPropertyId}`), propertyData);
@@ -484,11 +494,14 @@
         showSuccess('Property added');
       }
       resetForm();
-      loadSellerProperties();
-    } catch (err) { showError('Error saving: ' + err.message); }
+      await loadSellerProperties(); // force refresh
+    } catch (err) {
+      console.error("❌ Error saving property:", err);
+      showError('Error saving: ' + err.message);
+    }
   }
 
-  function resetForm() { /* unchanged */ 
+  function resetForm() {
     editingPropertyId = null;
     propertyIdInput.value = '';
     listingType.value = 'buy';
@@ -509,7 +522,7 @@
   }
 
   // ---------- SELLER PROFILE ----------
-  async function loadSellerProfile() { /* unchanged */ 
+  async function loadSellerProfile() {
     if (!currentUser) return;
     const snapshot = await get(child(ref(db), `users/${currentUser.uid}`));
     if (snapshot.exists()) {
@@ -520,7 +533,7 @@
     }
   }
 
-  async function updateSellerBrandName() { /* unchanged */ 
+  async function updateSellerBrandName() {
     const newName = sellerDisplayNameInput.value.trim();
     if (!newName) { showError('Please enter a brand/display name'); return; }
     try {
@@ -546,7 +559,6 @@
     }
     console.log("💬 Loading chats for seller (real-time):", currentUser.uid);
 
-    // Remove previous listener to avoid duplicates
     if (chatsListener) {
       chatsListener();
       chatsListener = null;
@@ -567,7 +579,6 @@
         chats.push({ id: child.key, ...child.val() });
       });
 
-      // Sort by lastUpdated (newest first)
       chats.sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
       console.log(`✅ Found ${chats.length} chats`);
 
@@ -591,14 +602,12 @@
       }
       chatListContainer.innerHTML = html;
 
-      // Attach click handlers
       document.querySelectorAll('.chat-item').forEach(el => {
         el.addEventListener('click', () => {
           const chatId = el.getAttribute('data-chatid');
           const buyerId = el.getAttribute('data-buyerid');
           const buyerName = el.getAttribute('data-buyername');
           openChat(chatId, buyerId, buyerName);
-          // Mark as read
           update(ref(db, `chats/${chatId}`), { sellerHasUnread: false });
           el.querySelector('.unread-badge')?.remove();
         });
@@ -610,7 +619,6 @@
   }
 
   function openChat(chatId, buyerId, buyerName) {
-    // Remove previous message listener
     if (messageListener) messageListener();
 
     currentChatId = chatId;
@@ -626,7 +634,6 @@
       displayChatMessage(msg);
     });
 
-    // Mark as read
     update(ref(db, `chats/${chatId}`), { sellerHasUnread: false });
   }
 
@@ -665,7 +672,7 @@
   }
 
   // ---------- OFFERS ----------
-  async function loadOffers() { /* unchanged */ 
+  async function loadOffers() {
     if (!currentUser) {
       console.warn("loadOffers: No currentUser");
       return;
@@ -753,7 +760,7 @@
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     document.getElementById(`${tabId}Tab`).classList.add('active');
     if (tabId === 'offers') loadOffers();
-    if (tabId === 'chats') loadChats(); // Will reattach listener
+    if (tabId === 'chats') loadChats();
   }
 
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -763,7 +770,7 @@
     });
   });
 
-  // ---------- AUTO REFRESH (still useful for offers, but chats are real-time) ----------
+  // ---------- AUTO REFRESH ----------
   function startRefresh() {
     if (refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(() => {
@@ -771,7 +778,7 @@
       if (activeTab) {
         const tabId = activeTab.getAttribute('data-tab');
         if (tabId === 'offers') loadOffers();
-        // chats are live, no need to refresh
+        // chats are real-time
       }
     }, 10000);
   }
@@ -782,12 +789,11 @@
   updateBrandBtn.addEventListener('click', updateSellerBrandName);
   sendChatBtn.addEventListener('click', sendChatMessage);
   chatMessageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
-  document.getElementById('logoutBtn').addEventListener('click', async () => { 
-    // Clean up listeners
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
     if (chatsListener) chatsListener();
     if (messageListener) messageListener();
-    await signOut(auth); 
-    window.location.href = 'index.html'; 
+    await signOut(auth);
+    window.location.href = 'index.html';
   });
 
   // ---------- AUTH ----------
@@ -808,7 +814,7 @@
     console.log("✅ Seller role confirmed");
     await loadSellerProfile();
     loadSellerProperties();
-    loadChats();   // starts real-time listener
+    loadChats();
     loadOffers();
     startRefresh();
   });
