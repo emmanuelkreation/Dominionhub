@@ -7,9 +7,39 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    /* ===== Reset & Base ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1f2937; line-height: 1.5; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #ffffff;
+      color: #1f2937;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
     .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+    /* ===== Animations ===== */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .animate {
+      opacity: 0;
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .animate.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .animate.slide-up { transform: translateY(40px); }
+    .animate.slide-left { transform: translateX(-40px); }
+    .animate.slide-right { transform: translateX(40px); }
+
+    /* ===== Navbar ===== */
     .navbar {
       background: rgba(255,255,255,0.98);
       backdrop-filter: blur(4px);
@@ -17,12 +47,12 @@
       position: sticky;
       top: 0;
       z-index: 100;
+      padding: 0.8rem 0;
     }
     .nav-container {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem 0;
       flex-wrap: wrap;
     }
     .logo {
@@ -53,6 +83,11 @@
       color: #1e3a8a;
       font-weight: 600;
       cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-outline:hover {
+      background: #1e3a8a;
+      color: white;
     }
     .btn-primary {
       background: #1e3a8a;
@@ -62,16 +97,34 @@
       color: white;
       font-weight: 600;
       cursor: pointer;
+      transition: background 0.2s;
     }
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+
+    /* ===== Hero ===== */
     .hero {
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://i.pinimg.com/1200x/a5/bf/3c/a5bf3cb953b15cec09e2feb363307cf8.jpg?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
-      background-size: cover;
-      background-position: center 30%;
-      padding: 5rem 0 6rem;
+      background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('https://images.unsplash.com/photo-1560518883-ce09059eeffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center/cover no-repeat;
+      padding: 5rem 0 4rem;
       color: white;
+      text-align: center;
+      animation: fadeIn 1s ease;
     }
-    .hero h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1rem; text-align: center; }
-    .hero p { text-align: center; font-size: 1.2rem; margin-bottom: 2rem; }
+    .hero h1 {
+      font-size: 3.2rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      animation: fadeInUp 0.8s ease;
+    }
+    .hero .subhead {
+      font-size: 1.25rem;
+      max-width: 750px;
+      margin: 0 auto 2rem;
+      opacity: 0.9;
+      line-height: 1.6;
+      animation: fadeInUp 1s ease;
+    }
     .search-card {
       background: white;
       border-radius: 60px;
@@ -82,6 +135,7 @@
       flex-wrap: wrap;
       gap: 0.5rem;
       box-shadow: 0 20px 35px -10px rgba(0,0,0,0.3);
+      animation: fadeInUp 1.2s ease;
     }
     .search-card input {
       flex: 3;
@@ -99,12 +153,16 @@
       color: white;
       font-weight: 700;
       cursor: pointer;
+      padding: 0 1.5rem;
+      transition: background 0.2s;
     }
+    .search-card button:hover { background: #b45309; }
     .tabs {
       display: flex;
       justify-content: center;
       gap: 1rem;
       margin-top: 2rem;
+      animation: fadeInUp 1.4s ease;
     }
     .tab-btn {
       background: rgba(255,255,255,0.2);
@@ -115,8 +173,12 @@
       color: white;
       font-weight: 600;
       cursor: pointer;
+      transition: 0.2s;
     }
     .tab-btn.active { background: #d97706; }
+    .tab-btn:hover { background: rgba(255,255,255,0.4); }
+
+    /* ===== Section Titles ===== */
     .section-title {
       font-size: 2rem;
       font-weight: 700;
@@ -130,12 +192,15 @@
       height: 3px;
       background: #d97706;
       margin: 0.8rem auto 0;
+      border-radius: 2px;
     }
+
+    /* ===== Recent Listings ===== */
     .property-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 2rem;
-      margin-top: 1rem;
+      margin: 1.5rem 0;
     }
     .property-card {
       background: white;
@@ -156,18 +221,13 @@
       background-position: center;
     }
     .card-content { padding: 1.2rem; }
-    .price { font-size: 1.5rem; font-weight: 800; color: #1e3a8a; }
+    .price { font-size: 1.4rem; font-weight: 800; color: #1e3a8a; }
     .address { color: #6b7280; margin: 0.3rem 0; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; }
     .features { display: flex; gap: 1rem; margin: 0.8rem 0; font-size: 0.85rem; }
     .features i { color: #d97706; margin-right: 0.2rem; }
     .seller-name { font-size: 0.75rem; color: #d97706; margin-top: 0.3rem; display: flex; align-items: center; gap: 0.3rem; }
-    .seller-name a {
-      color: #d97706;
-      text-decoration: none;
-    }
-    .seller-name a:hover {
-      text-decoration: underline;
-    }
+    .seller-name a { color: #d97706; text-decoration: none; }
+    .seller-name a:hover { text-decoration: underline; }
     .badge {
       display: inline-block;
       background: #eef2ff;
@@ -189,49 +249,264 @@
     }
     .listing-type-badge.rent { background: #d97706; }
     .listing-type-badge.lease { background: #10b981; }
-    .view-all {
-      text-align: center;
+    .view-all { text-align: center; margin: 2rem 0; }
+
+    /* ===== Feature / Service Cards ===== */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 2rem;
       margin: 2rem 0;
     }
-    .view-all .btn-primary {
-      padding: 0.8rem 2rem;
-      font-size: 1rem;
-    }
-    .cta-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
-      justify-content: center;
-      margin: 3rem 0;
-    }
-    .cta-card {
+    .service-card {
       background: #f8fafc;
       border-radius: 1.5rem;
-      padding: 2rem;
+      padding: 2rem 1.5rem;
       text-align: center;
-      flex: 1;
-      min-width: 220px;
-      transition: 0.2s;
+      transition: all 0.3s;
       border: 1px solid #e2e8f0;
     }
-    .cta-card:hover { background: white; box-shadow: 0 15px 25px -10px rgba(0,0,0,0.1); }
-    .cta-card i { font-size: 2.5rem; color: #d97706; margin-bottom: 1rem; }
-    .why-us {
+    .service-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 15px 30px -10px rgba(0,0,0,0.08);
+    }
+    .service-card i {
+      font-size: 2.8rem;
+      color: #1e3a8a;
+      margin-bottom: 1rem;
+    }
+    .service-card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+    .service-card p { color: #6b7280; font-size: 0.9rem; }
+
+    /* ===== Stats ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 2rem;
+      margin: 2rem 0;
+      text-align: center;
+    }
+    .stat-item .number {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #1e3a8a;
+      display: block;
+    }
+    .stat-item .label {
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+
+    /* ===== About / Mission ===== */
+    .about-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3rem;
+      align-items: center;
+      margin: 3rem 0;
       background: #f1f5f9;
       border-radius: 2rem;
       padding: 2.5rem;
+    }
+    .about-image {
+      flex: 1;
+      min-width: 220px;
+      border-radius: 1.5rem;
+      overflow: hidden;
+    }
+    .about-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+      max-height: 300px;
+      object-fit: cover;
+    }
+    .about-text {
+      flex: 1.5;
+      min-width: 260px;
+    }
+    .about-text h2 { font-size: 2rem; margin-bottom: 1rem; }
+    .about-text p { color: #4b5563; line-height: 1.7; margin-bottom: 0.8rem; }
+
+    /* ===== How It Works ===== */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
       margin: 2rem 0;
+    }
+    .step-card {
+      text-align: center;
+      padding: 1.5rem;
+      background: white;
+      border-radius: 1.5rem;
+      border: 1px solid #e2e8f0;
+    }
+    .step-card .step-number {
+      display: inline-block;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #1e3a8a;
+      color: white;
+      font-weight: 700;
+      font-size: 1.2rem;
+      line-height: 48px;
+      margin-bottom: 0.8rem;
+    }
+    .step-card h3 { font-size: 1.2rem; margin-bottom: 0.4rem; }
+    .step-card p { color: #6b7280; font-size: 0.9rem; }
+
+    /* ===== Mission / "What We Do" ===== */
+    .mission-section {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      color: white;
+      border-radius: 2rem;
+      padding: 3rem 2rem;
+      margin: 3rem 0;
       text-align: center;
     }
-    .why-items {
+    .mission-section h2 { font-size: 2.2rem; margin-bottom: 1rem; }
+    .mission-section p { max-width: 700px; margin: 0 auto 1.5rem; opacity: 0.95; line-height: 1.7; }
+    .mission-section .btn-outline {
+      border-color: white;
+      color: white;
+    }
+    .mission-section .btn-outline:hover {
+      background: white;
+      color: #1e3a8a;
+    }
+
+    /* ===== Feature Highlights (with images) ===== */
+    .feature-highlights {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+    .highlight-card {
+      background: white;
+      border-radius: 1.5rem;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      border: 1px solid #e2e8f0;
+      transition: transform 0.3s;
+    }
+    .highlight-card:hover { transform: scale(1.01); }
+    .highlight-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+    .highlight-card .content {
+      padding: 1.2rem;
+    }
+    .highlight-card .content h3 { font-size: 1.2rem; margin-bottom: 0.3rem; }
+    .highlight-card .content p { color: #6b7280; font-size: 0.9rem; }
+
+    /* ===== Mortgage Calculator ===== */
+    .mortgage-section {
+      background: #f1f5f9;
+      border-radius: 2rem;
+      padding: 2.5rem;
+      margin: 3rem 0;
+    }
+    .mortgage-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 2rem;
-      justify-content: space-between;
-      margin-top: 2rem;
+      align-items: center;
     }
-    .why-item { flex: 1; min-width: 180px; }
-    .why-item i { font-size: 2rem; color: #1e3a8a; margin-bottom: 0.8rem; }
+    .mortgage-inputs {
+      flex: 1;
+      min-width: 240px;
+    }
+    .mortgage-inputs label {
+      display: block;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+    .mortgage-inputs input {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      margin-top: 0.3rem;
+    }
+    .mortgage-result {
+      flex: 1;
+      min-width: 180px;
+      background: white;
+      padding: 2rem;
+      border-radius: 1.5rem;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    .mortgage-result h4 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+    .mortgage-result .payment { font-size: 2.2rem; font-weight: 800; color: #1e3a8a; }
+
+    /* ===== Testimonials ===== */
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+    .testimonial-card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 1.8rem;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      border: 1px solid #e2e8f0;
+      transition: transform 0.3s;
+    }
+    .testimonial-card:hover { transform: scale(1.01); }
+    .testimonial-card .stars { color: #d97706; margin-bottom: 0.5rem; }
+    .testimonial-card blockquote { font-style: italic; color: #4b5563; margin-bottom: 0.8rem; }
+    .testimonial-card .author { font-weight: 600; }
+    .testimonial-card .role { color: #6b7280; font-size: 0.85rem; }
+
+    /* ===== CTA Newsletter ===== */
+    .cta-newsletter {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      color: white;
+      border-radius: 2rem;
+      padding: 2.5rem;
+      margin: 3rem 0;
+      text-align: center;
+    }
+    .cta-newsletter h2 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .cta-newsletter p { margin-bottom: 1.5rem; opacity: 0.9; }
+    .cta-newsletter form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .cta-newsletter input {
+      flex: 2;
+      padding: 0.7rem 1.2rem;
+      border: none;
+      border-radius: 40px;
+      font-size: 1rem;
+      outline: none;
+      min-width: 180px;
+    }
+    .cta-newsletter button {
+      background: #d97706;
+      border: none;
+      padding: 0.7rem 1.8rem;
+      border-radius: 40px;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .cta-newsletter button:hover { background: #b45309; }
+
+    /* ===== Footer ===== */
     footer {
       background: #0f172a;
       color: #cbd5e1;
@@ -240,7 +515,7 @@
     }
     .footer-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 2rem;
       margin-bottom: 2rem;
     }
@@ -256,7 +531,9 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      transition: background 0.2s;
     }
+    .social-icons a:hover { background: #d97706; }
     .newsletter input {
       width: 100%;
       padding: 0.7rem;
@@ -273,6 +550,7 @@
       border-radius: 40px;
       color: white;
       cursor: pointer;
+      font-weight: 600;
     }
     .copyright {
       text-align: center;
@@ -280,16 +558,41 @@
       border-top: 1px solid #1e293b;
       font-size: 0.8rem;
     }
+    .mt-1 { margin-top: 1rem; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 992px) {
+      .hero h1 { font-size: 2.8rem; }
+      .hero .subhead { font-size: 1.1rem; }
+    }
     @media (max-width: 768px) {
-      .hero h1 { font-size: 2rem; }
+      .hero { padding: 3rem 0; }
+      .hero h1 { font-size: 2.2rem; }
+      .hero .subhead { font-size: 1rem; }
       .search-card { flex-direction: column; border-radius: 2rem; }
       .search-card input, .search-card button { width: 100%; border-radius: 2rem; padding: 0.8rem; }
-      .nav-container { flex-direction: column; gap: 1rem; }
+      .nav-container { flex-direction: column; gap: 0.8rem; }
+      .about-section { flex-direction: column; padding: 1.5rem; }
+      .about-image { width: 100%; }
+      .about-image img { max-height: 200px; }
+      .mortgage-grid { flex-direction: column; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .services-grid { grid-template-columns: 1fr 1fr; }
+      .feature-highlights { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .services-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .section-title { font-size: 1.5rem; }
+      .hero h1 { font-size: 1.8rem; }
+      .property-grid { grid-template-columns: 1fr; }
+      .cta-newsletter h2 { font-size: 1.5rem; }
     }
   </style>
 </head>
 <body>
 
+<!-- Navbar -->
 <nav class="navbar">
   <div class="container nav-container">
     <a href="index.html" class="logo">Dominion <span>Home Hub</span></a>
@@ -306,10 +609,14 @@
   </div>
 </nav>
 
+<!-- Hero -->
 <section class="hero">
   <div class="container">
-    <h1>Your Legacy Starts Here</h1>
-    <p>Premium homes, luxury rentals, and investment properties</p>
+    <h1>Discover Your Perfect Property</h1>
+    <p class="subhead">
+      Zero‑commission, real‑time listings, and a seamless experience from search to closing.
+      Buy, rent, or sell with confidence – backed by transparent analytics and secure messaging.
+    </p>
     <div class="search-card">
       <input type="text" id="searchLocation" placeholder="Search by city, zip code, or neighborhood...">
       <button id="searchBtn">Search →</button>
@@ -323,45 +630,191 @@
 </section>
 
 <div class="container">
-  <div class="section-title">🔥 Recent Listings</div>
-  <div id="propertyGrid" class="property-grid">
+
+  <!-- Recent Listings -->
+  <div class="section-title animate slide-up">🔥 Recent Listings</div>
+  <div id="propertyGrid" class="property-grid animate slide-up">
     <div style="text-align:center; grid-column:1/-1;">Loading properties...</div>
   </div>
   <div class="view-all">
     <button class="btn-primary" id="viewAllListingsBtn">View All Listings →</button>
   </div>
 
-  <div class="cta-grid">
-    <div class="cta-card" id="listPropCard">
+  <!-- Mission / What We Do -->
+  <div class="mission-section animate slide-up">
+    <h2>🌍 We Help People Find Home</h2>
+    <p>
+      At Dominion Home Hub, we believe that everyone deserves a place to call home.
+      Whether you're buying your first house, renting an apartment, or selling a property,
+      we empower you with the tools, insights, and community to make the right decision.
+      Our mission is to make real estate transparent, accessible, and human.
+    </p>
+    <button class="btn-outline" onclick="location.href='listings.html'">Explore Properties</button>
+  </div>
+
+  <!-- Services / Features -->
+  <div class="section-title animate slide-up">Why Dominion Home Hub?</div>
+  <div class="services-grid">
+    <div class="service-card animate slide-up">
       <i class="fas fa-home"></i>
-      <h3>List Your Property</h3>
-      <p>Reach thousands of serious buyers & tenants.</p>
-      <button class="btn-primary" style="margin-top:1rem;">Get started</button>
+      <h3>Zero Commission</h3>
+      <p>Buy and sell directly with no hidden fees – save thousands on every transaction.</p>
     </div>
-    <div class="cta-card" id="findAgentCard">
-      <i class="fas fa-handshake"></i>
-      <h3>Agent Partnership</h3>
-      <p>Work with top‑rated local agents.</p>
-      <button class="btn-primary" style="margin-top:1rem;">Learn more</button>
-    </div>
-    <div class="cta-card" id="mortgageCard">
+    <div class="service-card animate slide-up">
       <i class="fas fa-chart-line"></i>
+      <h3>Smart Analytics</h3>
+      <p>Track views, inquiries, and market trends in real time to make informed decisions.</p>
+    </div>
+    <div class="service-card animate slide-up">
+      <i class="fas fa-shield-alt"></i>
+      <h3>Secure Messaging</h3>
+      <p>Encrypted chat between buyers and sellers with read receipts and instant notifications.</p>
+    </div>
+    <div class="service-card animate slide-up">
+      <i class="fas fa-calculator"></i>
       <h3>Mortgage Center</h3>
-      <p>Calculate payments & get pre‑approved.</p>
-      <button class="btn-primary" style="margin-top:1rem;">Calculate</button>
+      <p>Calculate monthly payments, compare rates, and get pre‑approved – all in one place.</p>
     </div>
   </div>
 
-  <div class="why-us">
-    <h2>Why Dominion Home Hub?</h2>
-    <div class="why-items">
-      <div class="why-item"><i class="fas fa-check-circle"></i><h3>Zero Commission</h3><p>No hidden fees for buyers</p></div>
-      <div class="why-item"><i class="fas fa-chart-simple"></i><h3>Smart Analytics</h3><p>Real‑time views & lead tracking</p></div>
-      <div class="why-item"><i class="fas fa-shield-heart"></i><h3>Secure Transactions</h3><p>Verified listings & encrypted messaging</p></div>
+  <!-- Stats -->
+  <div class="stats-grid animate slide-up">
+    <div class="stat-item">
+      <span class="number">1,200+</span>
+      <span class="label">Active Listings</span>
+    </div>
+    <div class="stat-item">
+      <span class="number">4,800+</span>
+      <span class="label">Happy Clients</span>
+    </div>
+    <div class="stat-item">
+      <span class="number">97%</span>
+      <span class="label">Satisfaction Rate</span>
+    </div>
+    <div class="stat-item">
+      <span class="number">3.2K</span>
+      <span class="label">Properties Sold</span>
     </div>
   </div>
+
+  <!-- About Us -->
+  <div class="about-section animate slide-left">
+    <div class="about-image">
+      <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Modern Home">
+    </div>
+    <div class="about-text">
+      <h2>About Dominion Home Hub</h2>
+      <p>We are a premier real estate marketplace dedicated to connecting buyers, sellers, and renters with transparency and trust. Our platform offers zero‑commission listings, real‑time messaging, and powerful analytics to help you make informed decisions.</p>
+      <p>Whether you're looking for your first home, a luxury rental, or an investment property, our team is here to guide you every step of the way.</p>
+      <button class="btn-primary" onclick="location.href='listings.html'">Explore Listings →</button>
+    </div>
+  </div>
+
+  <!-- Feature Highlights with Images -->
+  <div class="section-title animate slide-up">✨ Beyond Just Listings</div>
+  <div class="feature-highlights">
+    <div class="highlight-card animate slide-up">
+      <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Luxury Interior">
+      <div class="content">
+        <h3>Luxury & Modern Homes</h3>
+        <p>Explore beautifully designed interiors with high‑end finishes and smart home features.</p>
+      </div>
+    </div>
+    <div class="highlight-card animate slide-up" style="animation-delay:0.2s;">
+      <img src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Happy Family">
+      <div class="content">
+        <h3>Happy Homeowners</h3>
+        <p>Join thousands of satisfied families who found their dream home through our platform.</p>
+      </div>
+    </div>
+    <div class="highlight-card animate slide-up" style="animation-delay:0.4s;">
+      <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Exterior View">
+      <div class="content">
+        <h3>Prime Locations</h3>
+        <p>From urban lofts to suburban retreats – find properties in the most sought‑after neighborhoods.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works -->
+  <div class="section-title animate slide-up">How It Works</div>
+  <div class="steps-grid">
+    <div class="step-card animate slide-up">
+      <div class="step-number">1</div>
+      <h3>Search</h3>
+      <p>Browse thousands of properties with advanced filters – find exactly what you're looking for.</p>
+    </div>
+    <div class="step-card animate slide-up" style="animation-delay:0.2s;">
+      <div class="step-number">2</div>
+      <h3>Connect</h3>
+      <p>Chat directly with sellers, schedule viewings, and make offers – all within the platform.</p>
+    </div>
+    <div class="step-card animate slide-up" style="animation-delay:0.4s;">
+      <div class="step-number">3</div>
+      <h3>Close</h3>
+      <p>Finalize your deal with confidence, backed by our secure messaging and analytics.</p>
+    </div>
+  </div>
+
+  <!-- Mortgage Calculator -->
+  <div class="mortgage-section animate slide-right">
+    <div class="section-title" style="margin-top:0;">🏡 Mortgage Calculator</div>
+    <div class="mortgage-grid">
+      <div class="mortgage-inputs">
+        <label>Property Price ($)</label>
+        <input type="number" id="mortgagePrice" placeholder="e.g., 500000" value="500000">
+        <label>Down Payment ($)</label>
+        <input type="number" id="mortgageDown" placeholder="e.g., 100000" value="100000">
+        <label>Interest Rate (%)</label>
+        <input type="number" id="mortgageRate" step="0.1" placeholder="e.g., 6.5" value="6.5">
+        <label>Loan Term (years)</label>
+        <input type="number" id="mortgageTerm" placeholder="e.g., 30" value="30">
+        <button class="btn-primary mt-1" id="calculateMortgage">Calculate</button>
+      </div>
+      <div class="mortgage-result">
+        <h4>Estimated Monthly Payment</h4>
+        <div class="payment" id="mortgagePayment">$0</div>
+        <p style="color:#6b7280; font-size:0.85rem;">Principal & Interest only</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Testimonials -->
+  <div class="section-title animate slide-up">💬 What Our Clients Say</div>
+  <div class="testimonials-grid">
+    <div class="testimonial-card animate slide-up">
+      <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+      <blockquote>“Dominion Home Hub made buying our first home a breeze. The zero‑commission policy saved us thousands!”</blockquote>
+      <div class="author">– Sarah & James</div>
+      <div class="role">First‑time Buyers</div>
+    </div>
+    <div class="testimonial-card animate slide-up" style="animation-delay:0.2s;">
+      <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+      <blockquote>“Listed my property and got an offer within 3 days. The dashboard analytics helped me track interest in real time.”</blockquote>
+      <div class="author">– Michael O.</div>
+      <div class="role">Seller</div>
+    </div>
+    <div class="testimonial-card animate slide-up" style="animation-delay:0.4s;">
+      <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+      <blockquote>“The mortgage calculator and transparent seller info gave us confidence. Highly recommend for renters too!”</blockquote>
+      <div class="author">– Emily R.</div>
+      <div class="role">Renter</div>
+    </div>
+  </div>
+
+  <!-- Newsletter CTA -->
+  <div class="cta-newsletter animate slide-up">
+    <h2>Stay Updated</h2>
+    <p>Subscribe to get the latest listings, market insights, and exclusive offers.</p>
+    <form id="newsletterForm">
+      <input type="email" placeholder="Your email address" required>
+      <button type="submit">Subscribe</button>
+    </form>
+  </div>
+
 </div>
 
+<!-- Footer -->
 <footer>
   <div class="container">
     <div class="footer-grid">
@@ -423,6 +876,7 @@
   const db = getDatabase(app);
   const auth = getAuth(app);
 
+  // DOM refs
   const propertyGrid = document.getElementById('propertyGrid');
   const searchLocationInput = document.getElementById('searchLocation');
   const searchBtn = document.getElementById('searchBtn');
@@ -430,20 +884,17 @@
   const loginBtn = document.getElementById('loginNavBtn');
   const signupBtn = document.getElementById('signupNavBtn');
   const dashboardBtn = document.getElementById('dashboardBtn');
-  
+
   let currentListingType = 'buy';
   let currentUser = null;
-  let currentUserRole = null;
   let propertiesListener = null;
 
+  // Helper functions
   async function getUserRole(uid) {
     try {
       const snapshot = await get(child(ref(db), `users/${uid}/role`));
       return snapshot.exists() ? snapshot.val() : null;
-    } catch (err) {
-      console.error("Error fetching role:", err);
-      return null;
-    }
+    } catch (err) { console.error(err); return null; }
   }
 
   function formatPrice(price) {
@@ -463,7 +914,7 @@
     }
     let html = '';
     properties.forEach(prop => {
-      const imageUrl = prop.images && prop.images.length ? prop.images[0] : 'https://via.placeholder.com/600x400?text=Dominion+Home';
+      const imageUrl = prop.images?.[0] || 'https://via.placeholder.com/600x400?text=Dominion+Home';
       const listingLabel = getListingLabel(prop.listingType);
       const typeClass = prop.listingType === 'rent' ? 'rent' : (prop.listingType === 'lease' ? 'lease' : '');
       html += `
@@ -479,9 +930,7 @@
             </div>
             <div class="seller-name">
               <i class="fas fa-user-circle"></i>
-              <a href="seller-profile.html?sellerId=${prop.sellerId}">
-                ${prop.sellerName || 'Property Owner'}
-              </a>
+              <a href="seller-profile.html?sellerId=${prop.sellerId}">${prop.sellerName || 'Property Owner'}</a>
             </div>
             <span class="badge">${prop.propertyType || 'Property'}</span>
           </div>
@@ -491,7 +940,6 @@
     container.innerHTML = html;
     container.querySelectorAll('.property-card').forEach(card => {
       card.addEventListener('click', (e) => {
-        // Prevent navigation if click is on the seller name link
         if (e.target.closest('a')) return;
         const id = card.getAttribute('data-id');
         window.location.href = `property-detail.html?id=${id}`;
@@ -500,34 +948,49 @@
   }
 
   function loadProperties() {
-    // Remove previous listener to avoid duplicates
-    if (propertiesListener) {
-      propertiesListener();
-      propertiesListener = null;
-    }
-
+    if (propertiesListener) { propertiesListener(); propertiesListener = null; }
     const propertiesRef = ref(db, 'properties');
     const q = query(propertiesRef, orderByChild('listingType'), equalTo(currentListingType));
-
     propertiesListener = onValue(q, (snapshot) => {
       if (snapshot.exists()) {
         const allProperties = [];
-        snapshot.forEach(child => {
-          allProperties.push({ id: child.key, ...child.val() });
-        });
-        // Sort by createdAt (newest first) and take first 6
+        snapshot.forEach(child => allProperties.push({ id: child.key, ...child.val() }));
+        // Sort by newest first and take 12
         const sorted = allProperties.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        const firstSix = sorted.slice(0, 6);
-        renderPropertyCards(firstSix, propertyGrid);
+        const firstTwelve = sorted.slice(0, 12);
+        renderPropertyCards(firstTwelve, propertyGrid);
       } else {
         propertyGrid.innerHTML = '<div style="text-align:center; grid-column:1/-1;">No properties found.</div>';
       }
     }, (error) => {
-      console.error("Error loading properties:", error);
+      console.error(error);
       propertyGrid.innerHTML = '<div style="text-align:center; grid-column:1/-1;">Error loading properties.</div>';
     });
   }
 
+  // Mortgage Calculator
+  document.getElementById('calculateMortgage').addEventListener('click', () => {
+    const price = parseFloat(document.getElementById('mortgagePrice').value) || 0;
+    const down = parseFloat(document.getElementById('mortgageDown').value) || 0;
+    const rate = parseFloat(document.getElementById('mortgageRate').value) || 0;
+    const term = parseFloat(document.getElementById('mortgageTerm').value) || 0;
+    const loanAmount = price - down;
+    if (loanAmount <= 0 || term <= 0 || rate < 0) {
+      document.getElementById('mortgagePayment').textContent = 'Invalid inputs';
+      return;
+    }
+    const monthlyRate = rate / 100 / 12;
+    const months = term * 12;
+    let payment = 0;
+    if (monthlyRate === 0) {
+      payment = loanAmount / months;
+    } else {
+      payment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+    }
+    document.getElementById('mortgagePayment').textContent = formatPrice(payment);
+  });
+
+  // Tab switching
   function setActiveTab(type) {
     currentListingType = type;
     tabBtns.forEach(btn => {
@@ -536,58 +999,36 @@
     });
     loadProperties();
   }
-
   tabBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const type = e.currentTarget.getAttribute('data-type');
-      setActiveTab(type);
+      setActiveTab(e.currentTarget.getAttribute('data-type'));
     });
   });
 
+  // Search
   searchBtn.addEventListener('click', () => {
     const location = searchLocationInput.value.trim();
     if (location) {
       window.location.href = `listings.html?location=${encodeURIComponent(location)}&type=${currentListingType}`;
     } else {
-      alert("Please enter a location");
+      alert('Please enter a location');
     }
   });
 
+  // View All
   document.getElementById('viewAllListingsBtn').addEventListener('click', () => {
     window.location.href = `listings.html?type=${currentListingType}`;
   });
 
-  const listPropBtn = document.querySelector('#listPropCard .btn-primary');
-  if (listPropBtn) {
-    listPropBtn.addEventListener('click', async () => {
-      if (!currentUser) {
-        window.location.href = 'login.html?redirect=dashboard.html';
-      } else {
-        const role = await getUserRole(currentUser.uid);
-        if (role === 'seller') {
-          window.location.href = 'dashboard.html';
-        } else {
-          alert('You need a seller account to list properties. Please sign up as a seller.');
-          window.location.href = 'login.html?signup=true';
-        }
-      }
-    });
-  }
-
-  document.getElementById('findAgentCard')?.querySelector('button')?.addEventListener('click', () => alert("Agent partnership portal coming soon."));
-  document.getElementById('mortgageCard')?.querySelector('button')?.addEventListener('click', () => alert("Mortgage calculator available on property pages."));
-
-  dashboardBtn?.addEventListener('click', async () => {
-    if (!currentUser) return;
-    const role = await getUserRole(currentUser.uid);
-    if (role === 'seller') {
-      window.location.href = 'dashboard.html';
-    } else {
-      window.location.href = 'buyer-dashboard.html';
-    }
+  // Newsletter form (basic feedback)
+  document.getElementById('newsletterForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    alert('Thank you for subscribing! We\'ll keep you updated.');
+    e.target.reset();
   });
 
-  function addLogoutButton() {
+  // Auth state
+  async function addLogoutButton() {
     const navLinks = document.querySelector('.nav-links');
     if (navLinks && !document.getElementById('logoutNavBtn')) {
       const logoutBtn = document.createElement('button');
@@ -596,7 +1037,6 @@
       logoutBtn.textContent = 'Logout';
       logoutBtn.style.marginLeft = '0.5rem';
       logoutBtn.addEventListener('click', async () => {
-        // Clean up listener
         if (propertiesListener) propertiesListener();
         await signOut(auth);
         window.location.reload();
@@ -608,13 +1048,16 @@
   onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     if (user) {
-      currentUserRole = await getUserRole(user.uid);
+      const role = await getUserRole(user.uid);
       loginBtn.style.display = 'none';
       signupBtn.style.display = 'none';
       dashboardBtn.style.display = 'inline-block';
+      // Redirect dashboard button based on role
+      dashboardBtn.onclick = () => {
+        window.location.href = (role === 'seller') ? 'dashboard.html' : 'buyer-dashboard.html';
+      };
       addLogoutButton();
     } else {
-      currentUserRole = null;
       loginBtn.style.display = 'inline-block';
       signupBtn.style.display = 'inline-block';
       dashboardBtn.style.display = 'none';
@@ -622,6 +1065,18 @@
       if (existingLogout) existingLogout.remove();
     }
   });
+
+  // Intersection Observer for animations
+  const observerOptions = { threshold: 0.15, rootMargin: '0px 0px -40px 0px' };
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.animate').forEach(el => observer.observe(el));
 
   // Initial load
   loadProperties();
